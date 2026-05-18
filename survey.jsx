@@ -20,7 +20,7 @@ const SHARED_KEY = 'ai-maturity:submissions';
  * Free tier: 50 submissions / month. No signup needed beyond email.
  * Each submission arrives in your inbox with the full JSON payload.
  */
-const FORMSPREE_FORM_ID = 'xayzwabc'; // e.g. 'xayzwabc'  ← paste form ID here
+const FORMSPREE_FORM_ID = 'mqejaady'; // e.g. 'xayzwabc'  ← paste form ID here
 const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
   ? `https://formspree.io/f/${FORMSPREE_FORM_ID}`
   : null;
