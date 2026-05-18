@@ -1,0 +1,381 @@
+# AI Integration Maturity Survey — content source of truth.
+# Edit this file to change question text, options, tiers, or notes.
+# The web app reads this YAML at runtime; refresh to see changes.
+#
+# Adding a new option: copy an existing `- level:` block and adjust.
+# Level is the maturity score (1–5). Multiple options at the same level
+# are fine — the runtime treats them as equally weighted.
+# Removing a question: delete its block under `questions:`.
+#
+# After editing, ask Claude: "Apply my YAML edits to Survey.jsx" so the
+# artifact-ready file stays in sync. The live preview at index.html
+# updates automatically on reload.
+
+demographics:
+  - id: a1
+    label: "Quy mô team đang tham gia dự án (kể cả AI tools)"
+    options:
+      - "1–3 người"
+      - "4–10 người"
+      - "11–30 người"
+      - ">30 người"
+  - id: a2
+    label: "Dự án đã chạy bao lâu kể từ khi tích hợp AI vào quy trình?"
+    options:
+      - "<3 tháng"
+      - "3–12 tháng"
+      - "1–2 năm"
+      - ">2 năm"
+
+tiers:
+  - min: 1
+    max: 1.8
+    name: "Ad-hoc"
+    recommendation: |-
+      Đang ở giai đoạn cá nhân thử nghiệm. Ưu tiên thiết lập convention chung và 1–2 guardrail an toàn (sandboxing, PR review).
+  - min: 1.9
+    max: 2.7
+    name: "Repeatable"
+    recommendation: |-
+      Có pattern lặp lại nhưng phân mảnh. Ưu tiên tài liệu hóa workflow, thống nhất context file, và bắt đầu track cost cơ bản.
+  - min: 2.8
+    max: 3.6
+    name: "Defined"
+    recommendation: |-
+      Có quy trình rõ ràng. Bước tiếp theo: đưa đo lường định lượng vào (evals, cost telemetry, success rate).
+  - min: 3.7
+    max: 4.4
+    name: "Managed"
+    recommendation: |-
+      Đo lường đã có. Bước tiếp theo: vòng lặp cải tiến tự động, optimization dựa dữ liệu, áp dụng toàn tổ chức.
+  - min: 4.5
+    max: 5
+    name: "Optimizing"
+    recommendation: |-
+      Top-tier. Tập trung vào sustainability, governance ở quy mô lớn, và đóng góp ngược cho cộng đồng (open eval set, harness pattern, contrib upstream).
+
+questions:
+  - id: 1
+    topic: "Ước lượng công sức Phase 1"
+    short: "Ước lượng"      # short label used on radar axis
+    text: |-
+      Khi dự án bước vào pha đầu tiên (discovery, POC, setup, kiến trúc khởi tạo), team của bạn ước lượng công sức như thế nào trong bối cảnh AI tham gia vào quy trình code?
+    measure: "Mức độ tích hợp yếu tố AI vào sizing/agile planning."
+    note: |-
+      Nhiều team rơi vào L2 nhưng tự xếp mình ở L4 vì "có dùng AI thì nhanh hơn". Bằng chứng L4 phải là dữ liệu được log, không phải intuition.
+    options:
+      - level: 1
+        text: |-
+          Team estimate Phase 1 hệt như dự án truyền thống — story point dựa trên thời gian gõ code thủ công. Không có điều chỉnh nào cho yếu tố AI.
+      - level: 2
+        text: |-
+          Team chủ động giảm story point cho các task mà cảm thấy "AI làm dễ", dựa trên cảm tính của senior dev. Không có công thức cụ thể.
+      - level: 3
+        text: |-
+          Việc ước lượng được tính theo nhiều chiều: độ đầy đủ của context (tài liệu, code base, conventions), mức lan tỏa thay đổi (số file bị ảnh hưởng), độ phức tạp của reasoning. Có template cho việc này.
+      - level: 4
+        text: |-
+          Team log lại số vòng lặp agent + thời gian human review trên từng ticket Phase 1, sử dụng dữ liệu này để hiệu chuẩn estimate cho sprint kế tiếp. Velocity được tính theo "hybrid throughput" (dev + agent).
+      - level: 5
+        text: |-
+          Có pipeline tự động phân tích độ phức tạp repository và context completeness để dự đoán risk Phase 1 trước khi sprint planning bắt đầu. Việc estimate gần như zero-overhead về mặt manual.
+
+  - id: 2
+    topic: "Khởi tạo session với AI"
+    short: "Khởi tạo session"      # short label used on radar axis
+    text: |-
+      Khi một dev trong team bắt đầu một session code với AI agent (Claude Code, Cursor, Copilot, ...), session đó được khởi tạo như thế nào?
+    measure: "Mức độ trưởng thành của context engineering ở giai đoạn priming."
+    note: |-
+      Có CLAUDE.md không phải tự động là L2 — nếu file đó bloat 5000 dòng, mọi turn đều đốt token, đôi khi còn tệ hơn L1 trên token efficiency.
+    options:
+      - level: 1
+        text: |-
+          Dev mở chat, paste code hoặc tài liệu liên quan trực tiếp vào prompt. Không có cấu trúc chuẩn, mỗi dev làm một kiểu.
+      - level: 2
+        text: |-
+          Có một file project-wide kiểu CLAUDE.md / .cursorrules / AGENTS.md chứa convention và background. Agent đọc nguyên file này mỗi turn.
+      - level: 3
+        text: |-
+          Project có cơ chế retrieval (RAG hoặc tương đương) + progressive disclosure: agent chỉ load metadata khi khởi động, query thêm context theo nhu cầu của task.
+      - level: 4
+        text: |-
+          Việc reset context và state handoff giữa các giai đoạn của session được encode trong harness. Session history được lưu ngoài active context và truy vấn theo index khi cần.
+      - level: 5
+        text: |-
+          Context được virtualize hoàn toàn: agent có thể slice/filter execution log như một external state object. Prompt caching được tối ưu, các session chạy qua nhiều context window mà không mất coherence.
+
+  - id: 3
+    topic: "Phát hiện và xử lý lỗi trong pipeline"
+    short: "Phát hiện lỗi"      # short label used on radar axis
+    text: |-
+      Khi agent hoàn thành một task nhưng output có vấn đề (sai logic mặc dù tools trả về thành công, regression ẩn, drift), team của bạn phát hiện và xử lý như thế nào?
+    measure: "Mức độ hệ thống hóa việc phát hiện silent failures."
+    note: |-
+      Silent failures chiếm xấp xỉ một nửa lỗi agent trong production; team chỉ dựa exception monitoring thường tin rằng mình ở L3+ cho đến khi audit thực tế.
+    options:
+      - level: 1
+        text: |-
+          Chỉ phát hiện khi có exception nổ ra hoặc HTTP error. Lỗi "silent" (tools chạy thành công nhưng output sai logic) thường lọt lưới đến khi user/QA phát hiện.
+      - level: 2
+        text: |-
+          Định kỳ có ai đó chạy lại một bộ test case cũ bằng tay để check regression. Phụ thuộc kỷ luật cá nhân, không có lịch cứng.
+      - level: 3
+        text: |-
+          Có pipeline tự động chạy canary tests/baseline diff theo lịch. Output cấu trúc của agent được so sánh với baseline đã lưu, có alert khi structural drift xảy ra.
+      - level: 4
+        text: |-
+          Schema của external API response và output agent được fingerprint (hash). Khi structural shape đổi, run bị terminate ngay trước khi corrupt downstream state.
+      - level: 5
+        text: |-
+          Agent chạy trong cyclical runtime với Actor-Critic / Reflexion loop: một evaluator độc lập đánh giá output, có FSM-bounded retry để tránh infinite loop. Lỗi tự phát hiện và tự correct trong giới hạn.
+
+  - id: 4
+    topic: "Human-in-the-loop và phân loại cải thiện vs. bug"
+    short: "HITL & phân loại"      # short label used on radar axis
+    text: |-
+      Dự án của bạn áp dụng HITL như thế nào, và khi agent đề xuất một thay đổi, team phân biệt được nó là cải thiện mới cần thêm hay bug cần fix bằng cơ chế gì?
+    measure: "Trưởng thành của oversight + classification process."
+    note: |-
+      "Cứ thấy approve gate là HITL" — nếu reviewer click yes mà không đọc, đó là security theater, vẫn xếp L2 chứ không phải L3.
+    options:
+      - level: 1
+        text: |-
+          Không có HITL chính thức. Dev dùng AI như một calculator offline — copy code rồi tự quyết định. Phân biệt cải thiện vs. bug hoàn toàn dựa trí nhớ và cảm tính.
+      - level: 2
+        text: |-
+          Mọi action của agent đều cần human approve (click "Yes" cho từng shell command, từng file edit). Distinguishing improvement vs. bug làm ad-hoc trong PR review.
+      - level: 3
+        text: |-
+          Có phân loại tĩnh theo rủi ro: action không thể đảo ngược (deploy, delete) cần approve, action có thể đảo ngược thì không. Improvement vs. bug được phân biệt bằng việc test cũ có fail hay không.
+      - level: 4
+        text: |-
+          Agent tự báo cáo confidence; output dưới threshold mới route về human. Có quy trình triage rõ ràng: "new behavior" (cải thiện cần spec mới) và "broken behavior" (bug) đi qua hai workflow tách biệt với owner khác nhau.
+      - level: 5
+        text: |-
+          Áp dụng challenge-response protocol và audit trail cryptographic. Thay đổi do AI tạo được tự động phân loại bằng model-based grader so với acceptance criteria, human chỉ spot-check theo sampling đã được calibrate.
+
+  - id: 5
+    topic: "Đóng gói kỹ năng thành Skills tái sử dụng"
+    short: "Skills"      # short label used on radar axis
+    text: |-
+      Dev trong dự án có đang chủ động đóng gói kỹ năng cá nhân thành các skill có thể tái sử dụng bởi agent không?
+    measure: "Mức độ codify tacit knowledge thành reusable agent capability."
+    note: |-
+      SKILL.md viết bằng ngôi thứ nhất ("I will help you...") hoặc trigger vague sẽ phá vỡ phase metadata discovery — agent bỏ qua skill hoặc trigger sai lúc. Có skill chưa chắc là L3, phải kiểm tra chất lượng frontmatter.
+    options:
+      - level: 1
+        text: |-
+          Mọi convention, style guide, deploy rule đều nhét vào một system prompt chung khổng lồ. Mỗi turn đốt token cho toàn bộ nội dung này dù task không liên quan.
+      - level: 2
+        text: |-
+          Có file project-wide kiểu CLAUDE.md nhưng agent đọc toàn bộ file mỗi turn. Chưa có khái niệm skill rời rạc.
+      - level: 3
+        text: |-
+          Có một số SKILL.md cơ bản trong filesystem theo chuẩn Agent Skills. Agent đọc metadata khi start, chỉ load skill khi query khớp trigger.
+      - level: 4
+        text: |-
+          Skills là multi-file với progressive disclosure: SKILL.md trỏ đến script (Python, bash) chạy trong sandbox, chỉ trả về output cho model. Logic phức tạp offload cho deterministic script.
+      - level: 5
+        text: |-
+          Có catalog skill enterprise được version hóa, ký số, có hierarchy override (team skill > project skill > global skill). Khi dev tìm ra workflow tốt, được khuyến khích và có quy trình PR hóa thành skill cho cả tổ chức.
+
+  - id: 6
+    topic: "Agent Harness — nhận thức và đo lường"
+    short: "Harness"      # short label used on radar axis
+    text: |-
+      Team của bạn có biết về khái niệm Agent Harness (lớp scaffolding bao quanh LLM: tool routing, planner, memory, sandbox, observability) không? Đã chủ động đo lường để đánh giá việc áp dụng harness cho dự án chưa?
+    measure: "Awareness + measurement maturity của agent scaffolding."
+    note: |-
+      Đây là vùng có ít industry consensus — L4–L5 hiện vẫn chủ yếu ở các công ty đầu ngành. Dự án ở L3 đã là "trên trung bình thị trường".
+    options:
+      - level: 1
+        text: |-
+          Team chưa biết hoặc chưa quan tâm khái niệm harness. Agent được dùng dạng single-shot prompt; không có scaffolding nào ngoài chat interface mặc định.
+      - level: 2
+        text: |-
+          Team đã nghe khái niệm này (qua blog post, tài liệu Anthropic / SWE-agent / OpenHands), đang dùng harness có sẵn của tool (Claude Code, Cursor) nhưng chưa custom hóa và chưa đo lường gì cụ thể.
+      - level: 3
+        text: |-
+          Project có harness được customize (định nghĩa tool subset, system prompt riêng, logging cơ bản). Có log số task completed / failed nhưng chưa phân tích sâu.
+      - level: 4
+        text: |-
+          Có metric định lượng theo dõi định kỳ: task success rate, intervention rate, latency, cost per task. Khi đổi prompt hoặc model, có A/B test trên evaluation set trước khi rollout.
+      - level: 5
+        text: |-
+          Harness có versioning. Mỗi thay đổi harness phải qua eval gate (regression suite + benchmark như SWE-bench Verified analog cho domain dự án). Có observability stack (OTel hoặc tương đương) cho cả production agents lẫn dev sessions.
+
+  - id: 7
+    topic: "Đảm bảo model đủ năng lực cho tác vụ"
+    short: "Model selection"      # short label used on radar axis
+    text: |-
+      Team của bạn làm gì để đảm bảo model đang dùng đủ năng lực cho hầu hết tác vụ trong dự án?
+    measure: "Trưởng thành trong việc match model capability với task complexity."
+    note: |-
+      Benchmark công khai như SWE-bench có vấn đề ground truth ở một tỷ lệ không nhỏ, và mô hình có thể "cheat" bằng cách inject test hook. L4–L5 luôn cần internal eval song song với public leaderboard.
+    options:
+      - level: 1
+        text: |-
+          Dùng model mặc định mà tool đang gắn sẵn. Không có quá trình so sánh hay đánh giá. Quyết định dựa hype hoặc demo trên Twitter.
+      - level: 2
+        text: |-
+          Chọn model một lần dựa trên thử nghiệm nội bộ vài task, hardcode lựa chọn này. Không revisit khi có model mới ra mắt.
+      - level: 3
+        text: |-
+          Theo dõi điểm benchmark công khai (SWE-bench Verified, Terminal-Bench) khi cân nhắc đổi model. Có một bộ task nội bộ chạy thử trên các candidate model trước khi quyết định.
+      - level: 4
+        text: |-
+          Đánh giá đa chiều — không chỉ benchmark coding mà cả tool-use, long-context, latency, cost — và chọn riêng cho từng loại task trong dự án.
+      - level: 5
+        text: |-
+          Có capability routing: tại runtime, một meta-component (hoặc manager agent) delegate từng task cho model phù hợp nhất theo trade-off cost/quality/latency. Tự động fall back khi model yếu fail.
+
+  - id: 8
+    topic: "Context Engineering trong session dài"
+    short: "Context engineering"      # short label used on radar axis
+    text: |-
+      Trong một session dài (nhiều giờ, nhiều task liên tiếp), dự án của bạn quản lý context của agent ra sao để chống context decay?
+    measure: |-
+      Khác Câu 2 — Câu 2 là khởi tạo session, Câu 8 là duy trì context trong khi session đang chạy.
+    note: |-
+      Provider quảng cáo context window "vài triệu token" nhưng thực tế model mất attention từ lâu trước giới hạn cấu trúc. Context engineering vẫn cần thiết kể cả với long-context model.
+    options:
+      - level: 1
+        text: |-
+          Cứ paste tiếp nội dung mới vào, không có chiến lược. Khi agent bắt đầu "quên" hay nhầm lẫn, dev mở session mới và bắt đầu lại từ đầu.
+      - level: 2
+        text: |-
+          Khi context dài, sử dụng tính năng compaction/summarization sẵn có của tool. Vẫn gặp tình trạng agent "context anxiety" — kết thúc task sớm vì sense context sắp đầy.
+      - level: 3
+        text: |-
+          Có chiến lược progressive disclosure — agent chỉ load tài liệu/code/tool definition khi cần. Có quy ước rõ ràng về cái gì luôn trong context, cái gì load on-demand.
+      - level: 4
+        text: |-
+          Có cơ chế reset + structured handoff định kỳ trong harness: session log lưu ngoài active window, có thể truy vấn lại. Long-running session spanning nhiều context windows mà vẫn giữ coherence.
+      - level: 5
+        text: |-
+          State được virtualize hoàn toàn ngoài context. Agent có thể slice/filter execution log như external object qua positional index. Prompt cache được tối ưu, gần như zero token waste.
+
+  - id: 9
+    topic: "Permissions, Sandboxing và Runtime Security"
+    short: "Sandbox & security"      # short label used on radar axis
+    text: |-
+      Khi agent thực thi shell command, edit file, install dependency, môi trường thực thi có được cô lập đến mức nào?
+    measure: "Defense-in-depth của sandbox & governance."
+    note: |-
+      Container Docker không phải là sandbox đúng nghĩa do shared kernel — đây là điểm thường bị nhầm. L3 trở lên đòi hỏi hardened hoặc VM-level.
+    options:
+      - level: 1
+        text: |-
+          Agent chạy thẳng trên máy local của dev hoặc trên CI runner production. Có quyền truy cập như user thường, có thể đọc/sửa mọi file dev có quyền.
+      - level: 2
+        text: |-
+          Agent chạy trong container Docker tiêu chuẩn (non-hardened) chia sẻ kernel với host. Có giới hạn cơ bản nhưng vẫn risk container escape.
+      - level: 3
+        text: |-
+          Hardened container: network bị disable hoàn toàn, không có root, filesystem mount read-only ở mức tối đa, secret được mask. Có tool allowlist tường minh trong harness.
+      - level: 4
+        text: |-
+          Mỗi session chạy trong microVM cô lập với kernel riêng, ephemeral disk. Identity của agent được chain với policy GitHub/GitLab branch protection cho commit do agent tạo.
+      - level: 5
+        text: |-
+          Block-level VM snapshotting cho cold start dưới 1 giây. Audit trail đầy đủ cho mọi tool call. Identity propagation chống privilege escalation khi agent gọi remote MCP server.
+
+  - id: 10
+    topic: "Evaluation Framework (Evals)"
+    short: "Evals"      # short label used on radar axis
+    text: |-
+      Dự án có cơ chế eval / regression test riêng cho output của AI agent không, và quy trình ra sao khi đổi model hoặc đổi prompt?
+    measure: "Trưởng thành của eval-driven development cho LLM output."
+    note: |-
+      LLM-as-judge không kèm calibration sẽ có alignment drift và bị agent "cheat" (inject pytest hook để force pass). L4 đúng nghĩa phải có deterministic check song song.
+    options:
+      - level: 1
+        text: |-
+          Dev tự verify bằng cách đọc log terminal hoặc chạy build local. Hoàn toàn chủ quan, không có baseline, không repeat được.
+      - level: 2
+        text: |-
+          Có một golden set 20–50 task được kiểm tra bằng tay khi đổi prompt/model. Chạy tuần tự, đôi khi bỏ qua khi gấp.
+      - level: 3
+        text: |-
+          Eval chạy parallel trong sandbox cô lập (mỗi case một container riêng), zero shared state. Có baseline số liệu để so sánh các phiên bản.
+      - level: 4
+        text: |-
+          Hybrid grader: deterministic check (exit code, file diff, string match) kết hợp LLM-as-judge với rubric đã calibrate so với human consensus. Cohen’s Kappa được track để đảm bảo LLM judge không drift.
+      - level: 5
+        text: |-
+          Continuous EDDOps loop: production runtime log được tự động tổng hợp thành regression case mới. Mọi thay đổi prompt/model/harness phải qua eval gate trước deploy. Phát hiện behavioral drift ngay khi xảy ra.
+
+  - id: 11
+    topic: "Cost & Token Observability"
+    short: "Cost & token"      # short label used on radar axis
+    text: "Bạn có đang theo dõi và quản lý token/cost của AI agent ở mức độ nào?"
+    measure: "Cost observability + governance."
+    note: |-
+      Flat-rate enterprise license thường tạo ảo giác "không cần track" — nhưng outlier do agent loop infinite có thể đốt budget rất nhanh, đặc biệt với cloud agent chạy nền.
+    options:
+      - level: 1
+        text: |-
+          Không track gì. Biết được mức chi tiêu qua hóa đơn cuối tháng. Khi cost tăng vọt thì giật mình không biết do đâu.
+      - level: 2
+        text: |-
+          Ước lượng token bằng heuristic kiểu "ký tự / 4". Inaccurate vì bỏ qua tokenizer khác nhau, không tính được prompt caching, không thấy format overhead.
+      - level: 3
+        text: |-
+          Parse usage thực từ API payload (input/output/cached token) và log vào session. Biết được chi phí chính xác từng run.
+      - level: 4
+        text: |-
+          Có database telemetry (SQL hoặc tương đương) gắn cost với ticket / PR / feature. Tính được chi phí thực để resolve một issue cụ thể, phân tầng theo dev/team.
+      - level: 5
+        text: |-
+          Pipeline OTel-driven xuyên multi-provider, có rate limit cap bảo vệ production. Tự động enforce budget, tự động route sang model rẻ hơn khi task không cần frontier.
+
+  - id: 12
+    topic: "Multi-agent & Subagent Orchestration"
+    short: "Multi-agent"      # short label used on radar axis
+    text: "Dự án có đang dùng nhiều agent / subagent phối hợp không, và tổ chức ra sao?"
+    measure: "Multi-agent architecture maturity."
+    note: |-
+      Đây là vùng nóng và contested — có người (Cognition) nổi tiếng cho rằng "Don't Build Multi-Agents" trong nhiều trường hợp. L2 (parallel-writer swarm) thường tệ hơn L1, không phải là tiến bộ.
+    options:
+      - level: 1
+        text: |-
+          Một agent duy nhất, prompt monolithic — planning, code, verification gộp vào một turn. Hay miss edge case, dễ hỏng với task vừa-và-trên.
+      - level: 2
+        text: |-
+          Triển khai swarm parallel — nhiều agent cùng ghi vào codebase trên các file khác nhau cùng lúc. Hay xảy ra conflict về style, kiến trúc, merge khó.
+      - level: 3
+        text: |-
+          Single-threaded write orchestration: nhiều agent có thể tham gia plan/review/research nhưng chỉ một agent được phép write tại một thời điểm. Plan được quản lý tập trung.
+      - level: 4
+        text: |-
+          Generator-Verifier loop với verifier có context tách biệt — verifier reason ngược từ code diff mà không thấy spec gốc của generator, tránh shared cognitive bias.
+      - level: 5
+        text: |-
+          Capability routing — manager agent dynamic delegate cho specialized model khác nhau theo loại sub-task (visual reasoning, regex, refactor lớn). Có guardrail cho "weaker-to-stronger" escalation để tránh missed escalation.
+
+  - id: 13
+    topic: "Team Enablement và chia sẻ tri thức"
+    short: "Team enablement"      # short label used on radar axis
+    text: |-
+      Khi một dev trong team tìm ra workflow AI hiệu quả, tri thức đó được lan tỏa thế nào trong tổ chức?
+    measure: "Knowledge propagation + cognitive debt control."
+    note: |-
+      Tốc độ AI tạo code vượt xa tốc độ team xây dựng "shared theory of the program" (Naur). Nếu không control cognitive debt, team có thể burn out trong vài tháng dù throughput đầu vào cao.
+    options:
+      - level: 1
+        text: |-
+          Mỗi dev tự cài extension/tool riêng, tự khám phá workflow. Tri thức nằm trong đầu cá nhân, không ai biết ai làm gì. Có dấu hiệu "cognitive debt" — dev không hiểu code AI tạo nhưng vẫn merge.
+      - level: 2
+        text: |-
+          Chia sẻ không chính thức qua kênh Slack/Discord; có wiki tĩnh nhưng nhanh chóng outdated khi tốc độ AI vượt tốc độ documentation thủ công.
+      - level: 3
+        text: |-
+          Có rule rõ: ít nhất một human phải fully understand mọi PR do AI tạo trước khi merge. Có cognitive-debt control tường minh, không cho phép merge "code mình không hiểu".
+      - level: 4
+        text: |-
+          Có specialized agent chuyên trách tribal knowledge mapping — extract pattern, non-obvious convention, edge case từ codebase và comment, output thành context file kiểu "Compass, Not Encyclopedia".
+      - level: 5
+        text: |-
+          Vòng lặp tự động: agent monitor commit gần đây, tự refresh tribal knowledge map. Onboarding cho dev mới gần như zero-time vì context file luôn cập nhật.
+
