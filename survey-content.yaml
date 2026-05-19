@@ -179,7 +179,7 @@ questions:
       Trước khi một ticket được giao cho dev sử dụng agent, ticket đó phải có những thông tin tối thiểu nào để giảm hiểu sai và giảm việc phải sửa/làm lại trong review/verify?
     measure: "Mức độ trưởng thành của definition of ready cho AI-assisted delivery."
     note: |-
-      Prompt tốt không thay thế được một ticket mơ hồ. Readiness của ticket là trách nhiệm delivery, không chỉ là kỹ năng prompt của dev.
+      Prompt tốt không thay thế được một ticket mơ hồ. Readiness là trách nhiệm của delivery, không chỉ là kỹ năng prompt của dev.
     options:
       - level: 1
         score: 1
@@ -200,7 +200,7 @@ questions:
       - level: 5
         score: 5
         text: |-
-          Readiness score của ticket được kiểm tra tự động; agent bị chặn khi thiếu thông tin quan trọng hoặc test baseline.
+          Readiness score (của ticket) được kiểm tra tự động; agent bị chặn khi thiếu thông tin quan trọng hoặc test baseline.
 
   - id: 2
     group: context
