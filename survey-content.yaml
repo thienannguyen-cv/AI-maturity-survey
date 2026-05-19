@@ -384,7 +384,7 @@ questions:
       Dự án có cơ chế eval/regression test riêng cho output của AI agent không, và làm gì khi đổi model, prompt hoặc harness?
     measure: "Mức độ trưởng thành của eval-driven development cho AI output."
     note: |-
-      Evals tốt kết hợp check xác định được với chấm theo rubric cho vấn đề khó viết thành test.
+      Về việc áp dụng các eval tốt, kết hợp deterministic check và việc đánh giá theo rubric cho các vấn đề khó viết thành test.
     options:
       - level: 1
         score: 1
