@@ -176,7 +176,7 @@ questions:
     topic: "Readiness trước khi giao việc cho agent"
     short: "Readiness"
     text: |-
-      Trước khi một agent bắt đầu làm ticket, team yêu cầu những thông tin tối thiểu nào để giảm hiểu sai và vòng sửa?
+      Trước khi một agent bắt đầu làm ticket, team yêu cầu những thông tin tối thiểu nào để giảm hiểu sai và rework?
     measure: "Mức độ trưởng thành của definition of ready cho AI-assisted delivery."
     note: |-
       Prompt tốt không thay thế được một ticket mơ hồ. Readiness là trách nhiệm delivery, không chỉ là kỹ năng prompt của dev.
