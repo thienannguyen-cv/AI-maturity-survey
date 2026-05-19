@@ -572,7 +572,9 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
             Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người
             quản lý khảo sát kèm một mã session tự sinh để phân biệt người tham gia.
             Không thu thập tên, email, hay thông tin định danh từ bạn. Bạn có thể tạm dừng
-            giữa chừng — tiến độ sẽ được khôi phục khi quay lại. Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.
+            giữa chừng — tiến độ sẽ được khôi phục khi quay lại. 
+            <br />
+            Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.
           </>
         ) : (
           <>
