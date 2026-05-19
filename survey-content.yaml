@@ -275,7 +275,7 @@ questions:
       Dev trong dự án có chủ động đóng gói kỹ năng, workflow hoặc tri thức dự án thành skill/tài sản tái sử dụng cho agent không?
     measure: "Mức độ codify tacit knowledge thành năng lực agent có thể tái sử dụng."
     note: |-
-      Điểm cao không chỉ là “có file skill”, mà là skill được trigger đúng lúc, có owner và được cải tiến sau khi dùng.
+      Việc “có file skill” không quan trọng bằng việc skill được trigger đúng lúc, có owner và được cải tiến sau khi dùng.
     options:
       - level: 1
         score: 1
@@ -371,7 +371,7 @@ questions:
       Dự án có cơ chế eval/regression test riêng cho output của AI agent không, và làm gì khi đổi model, prompt hoặc harness?
     measure: "Mức độ trưởng thành của eval-driven development cho AI output."
     note: |-
-      Về việc áp dụng các eval tốt, kết hợp deterministic check và việc đánh giá theo rubric cho các vấn đề khó viết thành test.
+      Eval tốt thường kết hợp deterministic check (unit test, schema validation) với rubric-based judgment (LLM-as-judge, human rating) cho các vấn đề khó viết thành test truyền thống.
     options:
       - level: 1
         score: 1
@@ -456,7 +456,7 @@ questions:
       - level: 5
         score: 5
         text: |-
-          Có budget guardrail và model routing theo cost/quality/latency; outlier được alert hoặc chặn tự động.
+          Có budget guardrail (giới hạn chi phí tự động) và model routing theo cost/quality/latency; outlier được alert hoặc chặn tự động.
 
   - id: 9
     group: operations
@@ -540,7 +540,7 @@ questions:
       - level: 2
         score: 2
         text: |-
-          Nhiều agent cùng ghi song song vào codebase, hay lệch style/kiến trúc và khó merge.
+          Nhiều agent cùng ghi song song vào codebase, dễ lệch style/kiến trúc và khó merge.
       - level: 3
         score: 3
         text: |-
