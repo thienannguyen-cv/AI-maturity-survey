@@ -918,7 +918,7 @@ function buildSubmission(sessionId, demographics, answers) {
 function computeWarnings(scored, demographics, summary) {
   const get = (id) => scored.find(s => s.id === id);
   const warnings = [];
-  const q1 = get(1), q3 = get(3), q5 = get(5), q6 = get(6), q7 = get(7), q9 = get(9), q10 = get(10), q11 = get(11), q12 = get(12);
+  const q1 = get(1), q3 = get(3), q5 = get(5), q6 = get(6), q7 = get(7), q9 = get(9), q10 = get(10), q11 = get(11), q12 = get(12), q14 = get(14), q15 = get(15);
 
   if (q1?.level >= 4 && q11?.level != null && q11.level <= 2) {
     warnings.push({
@@ -926,6 +926,22 @@ function computeWarnings(scored, demographics, summary) {
       title: 'Ước lượng cao nhưng cost observability thấp',
       detail: 'Bạn tự đánh giá ước lượng đã trưởng thành (Câu 1) nhưng chưa track cost/token (Câu 11). Khả năng cao estimate đang dựa trực giác chứ không phải dữ liệu — đáng xem lại Câu 1.',
       refs: [1, 11],
+    });
+  }
+  if (q1?.level >= 4 && ((q14?.level != null && q14.level <= 2) || (q15?.level != null && q15.level <= 2))) {
+    warnings.push({
+      key: 'q1-q14-q15',
+      title: 'Estimate cao nhưng planning readiness thấp',
+      detail: 'Ước lượng AI trưởng thành cần task slicing và definition of ready đủ rõ. Nếu Q14/Q15 thấp, estimate Phase 1 có thể vẫn đang dựa vào kỳ vọng hơn là điều kiện thực thi.',
+      refs: [1, 14, 15],
+    });
+  }
+  if (q14?.level >= 4 && q15?.level != null && q15.level <= 2) {
+    warnings.push({
+      key: 'q14-q15',
+      title: 'Task slicing tốt nhưng readiness chưa đủ',
+      detail: 'Backlog được chia cho AI khá tốt, nhưng trước khi agent chạy lại thiếu acceptance criteria/context/test command. Đây là nguồn rework phổ biến.',
+      refs: [14, 15],
     });
   }
   if (q3?.level >= 4 && q10?.level != null && q10.level <= 2) {
