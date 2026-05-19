@@ -90,27 +90,29 @@ groups:
     description: "Cách team chọn model, phối hợp agent và lan tỏa năng lực AI trong tổ chức."
 
 tiers:
+  # Boundaries derived from original spec: L1.0/1.8/2.7/3.6/4.4/5.0 mapped
+  # to weighted-percentage (score/max). E.g. all L1 answers => 20%, all L5 => 100%.
   - min: 0
-    max: 34
+    max: 36
     name: "Ad-hoc"
     recommendation: |-
       AI chủ yếu đang được dùng như nỗ lực cá nhân. Ưu tiên chuẩn hóa cách giao việc, PR review, sandbox tối thiểu và một bộ test/eval nhỏ.
-  - min: 35
+  - min: 37
     max: 54
     name: "Repeatable"
     recommendation: |-
       Đã có pattern lặp lại nhưng còn phụ thuộc cá nhân. Bước tiếp theo là thống nhất definition of ready/done, logging cơ bản và checklist HITL.
   - min: 55
-    max: 69
+    max: 72
     name: "Defined"
     recommendation: |-
       Quy trình đã tương đối rõ. Bước tiếp theo là đưa đo lường định lượng vào các điểm quan trọng: evals, defect escape, intervention rate và cost.
-  - min: 70
-    max: 84
+  - min: 73
+    max: 88
     name: "Managed"
     recommendation: |-
       Team đã quản lý AI như một phần của delivery system. Bước tiếp theo là tăng độ tự động của feedback loop và kiểm soát rủi ro theo dữ liệu.
-  - min: 85
+  - min: 89
     max: 100
     name: "Optimizing"
     recommendation: |-
@@ -549,7 +551,7 @@ questions:
         text: |-
           Một agent làm mọi thứ trong một luồng; planning, code và verification dễ lẫn vào nhau.
       - level: 2
-        score: 1
+        score: 2
         text: |-
           Nhiều agent cùng ghi song song vào codebase, hay lệch style/kiến trúc và khó merge.
       - level: 3

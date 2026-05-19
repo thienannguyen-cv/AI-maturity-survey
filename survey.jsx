@@ -522,19 +522,19 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
       </div>
 
       <h1 className="font-display font-medium text-[34px] sm:text-[44px] leading-[1.05] tracking-tight text-balance">
-        Độ trưởng thành tích hợp AI<br/>
+        Mức độ tích hợp AI<br/>
         <span className="text-muted">trong dự án phần mềm.</span>
       </h1>
 
       <p className="mt-8 text-[15px] sm:text-base leading-relaxed text-ink/80 max-w-xl">
         Bài đánh giá gồm <strong className="font-medium">{questionCount} câu maturity</strong> giúp bạn định vị
         dự án trên thang trưởng thành 5 mức (CMMI điều chỉnh cho AI-assisted development).
-        Bạn sẽ nhận được điểm tổng theo trọng số, profile radar {groupCount} nhóm, và khuyến nghị cụ thể cho bước
+        Bạn sẽ nhận được điểm tổng theo trọng số, profile radar {groupCount} nhóm tương tác được, và khuyến nghị cụ thể cho bước
         tiếp theo.
       </p>
 
       <dl className="mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-line/60 pt-8">
-        <Stat label="Thời gian" value="~12 phút" />
+        <Stat label="Thời gian" value="~15 phút" />
         <Stat label="Câu hỏi" value={`${demoCount} + ${questionCount}`} />
         <Stat label="Lưu trữ" value="Ẩn danh" />
       </dl>
@@ -1003,11 +1003,15 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
   const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
   const { scored, total, maxScore, percent, tier, warnings, groupSummaries, applicableCount, totalQuestions } = summary;
 
-  const radarData = groupSummaries.map(s => ({
-    topic: s.short,
-    fullTopic: s.name,
-    score: s.score,
-  }));
+  const [focusedGroup, setFocusedGroup] = useState(null);
+  const breakdownRef = useRef(null);
+
+  // When user picks a group on the radar, scroll the matching block into view.
+  useEffect(() => {
+    if (!focusedGroup || !breakdownRef.current) return;
+    const el = breakdownRef.current.querySelector(`[data-group="${focusedGroup}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusedGroup]);
 
   const handleDownload = () => {
     const payload = {
@@ -1091,9 +1095,15 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
 
       {/* Radar */}
       <section className="mt-12">
-        <SectionTitle eyebrow={`Profile ${groupSummaries.length} nhóm`} title="Bản đồ radar" />
+        <SectionTitle eyebrow={`Profile ${groupSummaries.length} nhóm · tương tác`} title="Bản đồ radar" />
         <div className="mt-6 -mx-3 sm:-mx-6">
-          <RadarBlock data={radarData} dark={dark} />
+          <RadarBlock
+            groupSummaries={groupSummaries}
+            scored={scored}
+            focusedGroup={focusedGroup}
+            onFocusChange={setFocusedGroup}
+            dark={dark}
+          />
         </div>
       </section>
 
@@ -1137,51 +1147,110 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
 
       {/* Per-topic breakdown — creator-only (preview mode). Participants chỉ thấy radar. */}
       {!deploy && (
-        <section className="mt-14">
+        <section className="mt-14" ref={breakdownRef}>
           <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-warn border border-warn/40 rounded-sm px-2 py-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
             Preview mode · chỉ người tạo thấy
           </div>
           <SectionTitle eyebrow={`${DATA.questions.length} câu · weighted scoring`} title="Chi tiết từng câu" />
-          <ol className="mt-6 space-y-3">
-            {scored.map((s, idx) => {
-              const q = DATA.questions[idx];
-              const group = getGroup(q.group);
+          <p className="mt-3 text-[13px] text-muted leading-relaxed max-w-2xl">
+            Sắp xếp theo {groupSummaries.length} nhóm. Bấm tên nhóm trên radar để cuộn xuống nhóm tương ứng — nhóm được chọn sẽ được làm nổi bật ở đây.
+          </p>
+
+          <div className="mt-8 space-y-10">
+            {groupSummaries.map(g => {
+              const items = scored
+                .map((s, idx) => ({ s, q: DATA.questions[idx] }))
+                .filter(({ q }) => q.group === g.id);
+              const isFocused = focusedGroup === g.id;
               return (
-                <li key={s.id} className="border border-line rounded-sm">
-                  <div className="px-4 sm:px-5 py-4 flex items-start gap-4">
-                    <div className="font-mono text-[11px] text-muted pt-0.5 w-6 shrink-0 tabular-nums">{String(s.id).padStart(2, '0')}</div>
-                    <div className="flex-1 min-w-0">
-                      {group && (
-                        <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted mb-1.5">
-                          {group.name}
-                        </div>
-                      )}
-                      <div className="font-display font-medium text-[15px] leading-snug">{q.topic}</div>
-                      <div className="mt-2 flex items-center gap-3">
-                        <LevelDots score={s.level || 0} />
-                        <div className="font-mono text-[11px] text-muted">
-                          {s.isNA
-                            ? `N/A · excluded · w${s.weight}`
-                            : `L${s.level} · ${formatScore(s.points)}/${formatScore(s.maxPoints)} điểm · w${s.weight}`}
-                        </div>
+                <div
+                  key={g.id}
+                  data-group={g.id}
+                  className={`scroll-mt-6 transition-all ${isFocused ? 'ring-2 ring-accent ring-offset-4 ring-offset-paper rounded-sm' : ''}`}
+                >
+                  <header className="border-b border-line pb-3 mb-4 flex items-baseline justify-between gap-3 flex-wrap">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-1">
+                        Nhóm · {items.length} câu
                       </div>
-                      {s.comment && (
-                        <p className="mt-3 text-[12.5px] leading-relaxed text-ink/75 border-l-2 border-line pl-3">
-                          <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Bối cảnh →</span>
-                          {s.comment}
-                        </p>
-                      )}
-                      <p className="mt-3 text-[12.5px] leading-relaxed text-ink/70">
-                        <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Lưu ý phổ biến →</span>
-                        {q.note}
-                      </p>
+                      <h3 className="font-display font-medium text-[19px] sm:text-[22px] leading-tight tracking-tight">
+                        {g.name}
+                      </h3>
                     </div>
-                  </div>
-                </li>
+                    <div className="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">
+                      {g.percent.toFixed(0)}% · {formatScore(g.total)}/{formatScore(g.maxScore)} điểm
+                    </div>
+                  </header>
+
+                  <ol className="space-y-3">
+                    {items.map(({ s, q }) => {
+                      const a = answers[q.id];
+                      const selectedOption = Number.isInteger(a?.originalIndex) && a.originalIndex >= 0
+                        ? q.options[a.originalIndex]
+                        : null;
+                      return (
+                        <li key={s.id} className="border border-line rounded-sm bg-paper">
+                          <div className="px-4 sm:px-5 py-4 flex items-start gap-4">
+                            <div className="font-mono text-[11px] text-muted pt-0.5 w-6 shrink-0 tabular-nums">
+                              {String(s.id).padStart(2, '0')}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              {/* Topic + score row */}
+                              <div className="flex items-start justify-between gap-3 flex-wrap">
+                                <div className="font-display font-medium text-[15px] leading-snug">{q.topic}</div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <LevelDots score={s.level || 0} />
+                                  <div className="font-mono text-[11px] text-muted tabular-nums">
+                                    {s.isNA
+                                      ? `N/A · w${s.weight}`
+                                      : `L${s.level} · ${formatScore(s.points)}/${formatScore(s.maxPoints)} · w${s.weight}`}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Question text */}
+                              <p className="mt-3 text-[13px] leading-relaxed text-ink/75">
+                                <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Hỏi →</span>
+                                {q.text}
+                              </p>
+
+                              {/* Selected option */}
+                              {selectedOption ? (
+                                <p className="mt-2 text-[13px] leading-relaxed text-ink/90 border-l-2 border-accent pl-3 py-0.5 bg-accent-soft/40">
+                                  <span className="font-mono uppercase tracking-wider text-[10px] text-accent mr-1.5">L{selectedOption.level} đã chọn →</span>
+                                  {selectedOption.text}
+                                </p>
+                              ) : s.isNA ? (
+                                <p className="mt-2 text-[13px] leading-relaxed text-muted border-l-2 border-line pl-3 py-0.5">
+                                  <span className="font-mono uppercase tracking-wider text-[10px] mr-1.5">Đã chọn →</span>
+                                  {DATA.scoring?.not_applicable?.label || 'Chưa áp dụng trong dự án'}
+                                </p>
+                              ) : null}
+
+                              {/* Respondent's open response */}
+                              {s.comment && (
+                                <p className="mt-2 text-[12.5px] leading-relaxed text-ink/75 border-l-2 border-line pl-3 py-0.5">
+                                  <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Bối cảnh →</span>
+                                  {s.comment}
+                                </p>
+                              )}
+
+                              {/* Author note */}
+                              <p className="mt-2 text-[12.5px] leading-relaxed text-ink/65 italic">
+                                <span className="not-italic font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Lưu ý →</span>
+                                {q.note}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
               );
             })}
-          </ol>
+          </div>
         </section>
       )}
 
@@ -1294,56 +1363,187 @@ function LevelDots({ score }) {
   );
 }
 
-function RadarBlock({ data, dark }) {
+function RadarBlock({ groupSummaries, scored, focusedGroup, onFocusChange, dark }) {
   // Mobile responsive height
-  const [height, setHeight] = useState(380);
+  const [height, setHeight] = useState(420);
   useEffect(() => {
     const onResize = () => {
       const w = window.innerWidth;
-      setHeight(w < 640 ? 340 : w < 768 ? 400 : 460);
+      setHeight(w < 640 ? 380 : w < 768 ? 440 : 500);
     };
     onResize();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Reactive to theme — use prop, not one-shot DOM read.
-  // Dark labels need significantly more brightness than the body ink color
-  // (`#e8e5dd`) to read crisply against the dark paper background.
-  const inkColor   = dark ? '#f5f0e6' : '#1c2230';
-  const lineColor  = dark ? '#4a4f5a' : '#dfd9cd';
+  const inkColor    = dark ? '#f5f0e6' : '#1c2230';
+  const mutedColor  = dark ? '#7a7e88' : '#a8a39a';
+  const lineColor   = dark ? '#4a4f5a' : '#dfd9cd';
   const accentColor = dark ? '#9fcfd4' : '#3a6f76';
 
+  const inDetailMode = !!focusedGroup;
+
+  // Overview: 5 group-level axes, score on the 0–5 scale derived from percent.
+  const overviewRows = groupSummaries.map(g => ({
+    key: g.id,
+    groupId: g.id,
+    axisLabel: g.short,
+    fullLabel: g.name,
+    score: g.score,
+  }));
+
+  // Detail: 16 question-level axes, ordered by group so each group occupies a
+  // contiguous arc — easier to "see" which axes belong together.
+  const groupOrder = Object.fromEntries(groupSummaries.map((g, i) => [g.id, i]));
+  const detailRows = scored
+    .slice()
+    .sort((a, b) => (groupOrder[a.group] - groupOrder[b.group]) || (a.id - b.id))
+    .map(s => ({
+      key: 'q' + s.id,
+      groupId: s.group,
+      axisLabel: s.short || ('Q' + s.id),
+      fullLabel: s.topic,
+      score: s.isNA ? 0 : (s.level || 0),
+      isNA: s.isNA,
+    }));
+
+  const rows = inDetailMode ? detailRows : overviewRows;
+
+  // Click logic:
+  // - overview: any click → enter detail mode focused on that group
+  // - detail: click on focused group's axis → no-op; otherwise → back to overview
+  function handleAxisClick(row) {
+    if (!row) return;
+    if (!inDetailMode) {
+      onFocusChange(row.groupId);
+      return;
+    }
+    if (row.groupId === focusedGroup) return;
+    onFocusChange(null);
+  }
+
+  // Custom tick renderer with click handler.
+  const Tick = ({ payload, x, y, textAnchor, ...rest }) => {
+    const row = rows.find(r => r.axisLabel === payload.value);
+    if (!row) return null;
+    const focused = !inDetailMode || row.groupId === focusedGroup;
+    return (
+      <g
+        onClick={() => handleAxisClick(row)}
+        style={{ cursor: 'pointer' }}
+        role="button"
+        tabIndex={0}
+        aria-label={`${row.fullLabel} — ${inDetailMode ? (focused ? 'thoát khỏi chế độ chi tiết' : 'quay lại tổng quan') : 'xem chi tiết nhóm'}`}
+      >
+        {/* Invisible hit area for easier tapping */}
+        <rect
+          x={x - 38} y={y - 12}
+          width={76} height={24}
+          fill="transparent"
+        />
+        <text
+          x={x} y={y}
+          textAnchor={textAnchor}
+          fill={focused ? inkColor : mutedColor}
+          fontSize={focused ? (inDetailMode ? 10.5 : 12) : 9.5}
+          fontWeight={focused ? 600 : 400}
+          fontFamily="IBM Plex Mono, ui-monospace, monospace"
+          opacity={focused ? 1 : 0.6}
+          style={{ userSelect: 'none' }}
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  };
+
+  // Custom dot renderer — in detail mode, focused group's dots are emphasized.
+  const Dot = (props) => {
+    const { cx, cy, index } = props;
+    if (cx == null || cy == null) return null;
+    const row = rows[index];
+    if (!row) return null;
+    if (row.isNA) {
+      // N/A: hollow ring, muted
+      return <circle cx={cx} cy={cy} r={3} fill="none" stroke={mutedColor} strokeWidth={1.2} />;
+    }
+    const focused = !inDetailMode || row.groupId === focusedGroup;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={focused ? (inDetailMode ? 4.5 : 3.5) : 2.5}
+        fill={focused ? accentColor : mutedColor}
+        opacity={focused ? 1 : 0.5}
+        strokeWidth={0}
+      />
+    );
+  };
+
+  const focusedGroupData = focusedGroup
+    ? groupSummaries.find(g => g.id === focusedGroup)
+    : null;
+
   return (
-    <div style={{ width: '100%', height }}>
-      <ResponsiveContainer>
-        <RadarChart data={data} outerRadius="72%" margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
-          <PolarGrid stroke={lineColor} />
-          <PolarAngleAxis
-            dataKey="topic"
-            tick={{ fill: inkColor, fontSize: 10.5, fontFamily: 'IBM Plex Mono, ui-monospace, monospace' }}
-            tickLine={false}
-          />
-          <PolarRadiusAxis
-            domain={[0, 5]}
-            tickCount={6}
-            angle={90}
-            tick={{ fill: lineColor, fontSize: 9 }}
-            stroke={lineColor}
-            axisLine={false}
-          />
-          <Radar
-            name="Maturity"
-            dataKey="score"
-            stroke={accentColor}
-            fill={accentColor}
-            fillOpacity={0.18}
-            strokeWidth={1.5}
-            dot={{ r: 3, fill: accentColor, strokeWidth: 0 }}
-            isAnimationActive={true}
-          />
-        </RadarChart>
-      </ResponsiveContainer>
+    <div>
+      {/* Interaction hint / focus state header */}
+      <div className="mb-3 px-3 sm:px-6 min-h-[44px] flex items-center justify-between gap-3 flex-wrap">
+        {inDetailMode && focusedGroupData ? (
+          <>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">Đang xem</div>
+                <div className="font-display font-medium text-[16px] leading-tight">{focusedGroupData.name}</div>
+              </div>
+              <div className="font-mono text-[12px] text-muted tabular-nums">
+                {focusedGroupData.percent.toFixed(0)}% · {focusedGroupData.applicableCount}/{focusedGroupData.questionCount} câu áp dụng
+              </div>
+            </div>
+            <button
+              onClick={() => onFocusChange(null)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider text-muted hover:text-ink border border-line hover:border-ink/40 rounded-sm transition-colors"
+            >
+              <X size={11} /> Quay lại tổng quan
+            </button>
+          </>
+        ) : (
+          <div className="font-mono text-[11px] text-muted">
+            Bấm vào tên nhóm để xem chi tiết · {groupSummaries.length} nhóm · {scored.length} chiều đo
+          </div>
+        )}
+      </div>
+
+      <div style={{ width: '100%', height }}>
+        <ResponsiveContainer>
+          <RadarChart data={rows} outerRadius={inDetailMode ? '68%' : '72%'} margin={{ top: 12, right: 24, bottom: 12, left: 24 }}>
+            <PolarGrid stroke={lineColor} />
+            <PolarAngleAxis
+              dataKey="axisLabel"
+              tick={<Tick />}
+              tickLine={false}
+            />
+            <PolarRadiusAxis
+              domain={[0, 5]}
+              tickCount={6}
+              angle={90}
+              tick={{ fill: lineColor, fontSize: 9 }}
+              stroke={lineColor}
+              axisLine={false}
+            />
+            <Radar
+              name="Maturity"
+              dataKey="score"
+              stroke={accentColor}
+              fill={accentColor}
+              fillOpacity={inDetailMode ? 0.12 : 0.18}
+              strokeWidth={1.5}
+              dot={<Dot />}
+              isAnimationActive={true}
+              animationDuration={300}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
