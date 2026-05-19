@@ -43,7 +43,7 @@ const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
  *           ResultScreen, nhưng VẪN gửi đầy đủ warnings trong email payload.
  * Đổi cờ này khi chuyển môi trường; không cần đổi gì khác.
  */
-const DEPLOY = true;
+const DEPLOY = false;
 
 /* ------------------------- storage wrapper -------------------------- */
 // window.storage in Claude artifacts; localStorage fallback for preview.
@@ -1113,7 +1113,7 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
         <section className="mt-14">
           <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-warn border border-warn/40 rounded-sm px-2 py-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
-            Preview mode · chỉ người tạo thấy
+            Preview
           </div>
           <SectionTitle eyebrow={`${warnings.length} tín hiệu phát hiện`} title="Đáng xem lại" />
           <p className="mt-4 text-[14px] text-ink/75 leading-relaxed max-w-2xl">
@@ -1150,7 +1150,7 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
         <section className="mt-14" ref={breakdownRef}>
           <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-warn border border-warn/40 rounded-sm px-2 py-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
-            Preview mode · chỉ người tạo thấy
+            Preview
           </div>
           <SectionTitle eyebrow={`${DATA.questions.length} câu · weighted scoring`} title="Chi tiết từng câu" />
           <p className="mt-3 text-[13px] text-muted leading-relaxed max-w-2xl">
