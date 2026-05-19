@@ -46,19 +46,13 @@ demographics:
       - "1–2 năm"
       - ">2 năm"
   - id: a4
-    label: "AI hiện tham gia vào phạm vi nào trong dự án?"
-    options:
-      - "Chủ yếu là trợ lý cá nhân cho dev"
-      - "Tạo code/test/doc cho từng ticket, có human review"
-      - "Agent có thể chạy tool, sửa file, mở PR hoặc hỗ trợ CI"
-      - "AI/agent là một phần của workflow vận hành hoặc sản phẩm production"
-  - id: a5
     label: "Mức độ rủi ro của domain dự án gần nhất với lựa chọn nào?"
     options:
       - "Internal tool hoặc prototype, rủi ro thấp"
       - "Sản phẩm khách hàng dùng, rủi ro trung bình"
       - "Hệ thống ảnh hưởng dữ liệu nhạy cảm, tài chính, bảo mật hoặc pháp lý"
       - "Nền tảng/core service nhiều team phụ thuộc"
+      - "Không rõ"
 
 groups:
   - id: planning
