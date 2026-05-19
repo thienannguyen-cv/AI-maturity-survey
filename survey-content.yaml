@@ -132,7 +132,7 @@ questions:
       - level: 4
         score: 4
         text: |-
-          Log thời gian agent, số vòng sửa, thời gian human review và dùng dữ liệu đó để hiệu chuẩn estimate.
+          Log thời gian agent, số lần phải sửa/làm lại sau review, thời gian human review và dùng dữ liệu đó để hiệu chuẩn estimate.
       - level: 5
         score: 5
         text: |-
@@ -144,7 +144,7 @@ questions:
     topic: "Phân rã phạm vi cho AI"
     short: "Task slicing"
     text: |-
-      Khi nhận một feature/epic mới, producer và team phân rã công việc như thế nào để AI agent tham gia hiệu quả mà không làm tăng rework?
+      Khi nhận một feature/epic mới, producer và team chia nhỏ công việc như thế nào để AI agent tham gia hiệu quả mà không làm tăng việc phải sửa/làm lại?
     measure: "Khả năng biến scope sản phẩm thành các lát công việc phù hợp với AI."
     note: |-
       AI thường hiệu quả hơn với task có boundary rõ, acceptance criteria rõ và cách kiểm chứng rõ.
@@ -160,7 +160,7 @@ questions:
       - level: 3
         score: 3
         text: |-
-          Có checklist chọn task AI-friendly: boundary nhỏ, đầu ra rõ, test/review có thể chạy được.
+          Có checklist chọn task phù hợp cho AI: phạm vi nhỏ, đầu ra rõ, test/review có thể chạy được.
       - level: 4
         score: 4
         text: |-
@@ -168,7 +168,7 @@ questions:
       - level: 5
         score: 5
         text: |-
-          Hệ thống đề xuất task slicing và confidence dựa trên repo, lịch sử rework và coverage; producer review trước sprint.
+          Hệ thống gợi ý cách chia task và mức độ tự tin dựa trên repo, lịch sử phải sửa/làm lại, mức độ có test/check bảo vệ khu vực liên quan và rủi ro; producer review trước sprint.
 
   - id: 15
     group: planning
@@ -176,10 +176,10 @@ questions:
     topic: "Readiness trước khi giao việc cho agent"
     short: "Readiness"
     text: |-
-      Trước khi một ticket được giao cho dev sử dụng agent, team yêu cầu ticket đó phải có những thông tin tối thiểu nào để giảm hiểu sai và giảm rework trong review/verify?
+      Trước khi một ticket được giao cho dev sử dụng agent, ticket đó phải có những thông tin tối thiểu nào để giảm hiểu sai và giảm việc phải sửa/làm lại trong review/verify?
     measure: "Mức độ trưởng thành của definition of ready cho AI-assisted delivery."
     note: |-
-      Prompt tốt không thay thế được một ticket mơ hồ. Readiness là trách nhiệm delivery, không chỉ là kỹ năng prompt của dev.
+      Prompt tốt không thay thế được một ticket mơ hồ. Readiness của ticket là trách nhiệm delivery, không chỉ là kỹ năng prompt của dev.
     options:
       - level: 1
         score: 1
@@ -192,15 +192,15 @@ questions:
       - level: 3
         score: 3
         text: |-
-          Definition of ready gồm acceptance criteria, module liên quan, test command và constraint quan trọng.
+          Các tiêu chuẩn bao gồm acceptance criteria, module liên quan, test command và constraint quan trọng.
       - level: 4
         score: 4
         text: |-
-          Mỗi run bắt đầu từ task packet: mục tiêu, context, rủi ro, rollback/review owner và lệnh verify.
+          Mỗi run bắt đầu từ task packet: mục tiêu, context, rủi ro, người review/rollback và lệnh verify.
       - level: 5
         score: 5
         text: |-
-          Readiness score được kiểm tra tự động; agent bị chặn khi thiếu thông tin quan trọng hoặc test baseline.
+          Readiness score của ticket được kiểm tra tự động; agent bị chặn khi thiếu thông tin quan trọng hoặc test baseline.
 
   - id: 2
     group: context
@@ -580,7 +580,7 @@ questions:
       - level: 4
         score: 4
         text: |-
-          Có cơ chế định kỳ review workflow AI, cập nhật context/skill và loại bỏ thực hành gây rework.
+          Có cơ chế định kỳ review workflow AI, cập nhật context/skill và loại bỏ thực hành làm tăng việc sửa/làm lại.
       - level: 5
         score: 5
         text: |-
