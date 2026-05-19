@@ -96,8 +96,30 @@ function seededShuffle(arr, seed) {
   }
   return r;
 }
-function tierFor(avg) {
-  return DATA.tiers.find(t => avg >= t.min && avg <= t.max) || DATA.tiers[0];
+function tierFor(percent) {
+  return DATA.tiers.find(t => percent >= t.min && percent <= t.max) || DATA.tiers[0];
+}
+function getGroup(groupId) {
+  return (DATA.groups || []).find(g => g.id === groupId) || null;
+}
+function getQuestionWeight(question) {
+  const raw = Number(question?.weight ?? DATA.scoring?.default_weight ?? 1);
+  return Number.isFinite(raw) && raw > 0 ? raw : 1;
+}
+function getOptionScore(option) {
+  const raw = Number(option?.score ?? option?.level ?? 0);
+  return Number.isFinite(raw) ? raw : 0;
+}
+function getMaxRawScore(question) {
+  const scores = (question?.options || []).map(getOptionScore);
+  return scores.length ? Math.max(...scores) : Number(DATA.scoring?.scale_max || 5);
+}
+function hasQuestionChoice(answer) {
+  return !!answer && (answer.isNA === true || Number.isFinite(Number(answer.level)));
+}
+function formatScore(value) {
+  const n = Number(value || 0);
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, '');
 }
 
 /* ------------------------- icons (inline SVG, Lucide-equiv) -------- */
@@ -128,9 +150,9 @@ function Survey() {
   const [sessionId, setSessionId] = useState(null);
   const [stage, setStage] = useState('welcome'); // welcome | demo | question | result
   const [demoIndex, setDemoIndex] = useState(0); // 0..1
-  const [qIndex, setQIndex] = useState(0);       // 0..12
+  const [qIndex, setQIndex] = useState(0);
   const [demographics, setDemographics] = useState({});
-  const [answers, setAnswers] = useState({});     // {qId: {level: 1..5 | null, optionIndex: number}}
+  const [answers, setAnswers] = useState({});     // {qId: {level, score, originalIndex, isNA, comment}}
   const [dark, setDark] = useState(false);
   const [showResume, setShowResume] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -248,13 +270,21 @@ function Survey() {
         participant_id: submission.sessionId,
         submitted_at: submission.submittedAt,
         tier: summary.tier.name,
-        total_score: summary.total,
-        average_score: summary.avg.toFixed(2),
-        team_size: submission.demographics?.a1 || '(không trả lời)',
-        project_age: submission.demographics?.a2 || '(không trả lời)',
+        total_score: formatScore(summary.total),
+        max_score: formatScore(summary.maxScore),
+        percent_score: summary.percent.toFixed(1),
+        applicable_questions: `${summary.applicableCount}/${summary.totalQuestions}`,
+        role: submission.demographics?.a1 || '(không trả lời)',
+        team_size: submission.demographics?.a2 || '(không trả lời)',
+        project_age: submission.demographics?.a3 || '(không trả lời)',
+        ai_scope: submission.demographics?.a4 || '(không trả lời)',
+        domain_risk: submission.demographics?.a5 || '(không trả lời)',
+        delivery_baseline: submission.demographics?.a6 || '(không trả lời)',
         warnings_count: summary.warnings.length,
         warnings: summary.warnings.map(w => `${w.title} [${w.refs.map(r => 'Q' + r).join(', ')}]`).join(' · '),
-        _subject: `AI Maturity · ${summary.tier.name} (${summary.avg.toFixed(2)}/5) · ${submission.sessionId.slice(0, 12)}`,
+        open_responses_count: submission.openResponses.length,
+        open_responses: submission.openResponses.map(r => `Q${r.questionId}: ${r.comment}`).join('\n---\n'),
+        _subject: `AI Maturity · ${summary.tier.name} (${summary.percent.toFixed(0)}%) · ${submission.sessionId.slice(0, 12)}`,
         full_payload_json: JSON.stringify(submission),
       };
       const res = await fetch(SUBMISSION_ENDPOINT, {
@@ -277,13 +307,7 @@ function Survey() {
   }, []);
 
   const submit = async () => {
-    const submission = {
-      sessionId,
-      submittedAt: new Date().toISOString(),
-      demographics,
-      answers, // anonymized — no PII collected
-      summary: computeSummary(answers, demographics),
-    };
+    const submission = buildSubmission(sessionId, demographics, answers);
     // Local shared storage (works even when endpoint is disabled/down)
     const prev = (await storage.get(SHARED_KEY, true)) || [];
     const list = Array.isArray(prev) ? prev : [];
@@ -299,13 +323,7 @@ function Survey() {
   };
 
   const retrySubmit = useCallback(() => {
-    const submission = {
-      sessionId,
-      submittedAt: new Date().toISOString(),
-      demographics,
-      answers,
-      summary: computeSummary(answers, demographics),
-    };
+    const submission = buildSubmission(sessionId, demographics, answers);
     sendToEndpoint(submission);
   }, [sessionId, demographics, answers, sendToEndpoint]);
 
@@ -340,7 +358,7 @@ function Survey() {
         if (e.key === 'ArrowRight' || e.key === 'Enter') {
           const canAdvance = stage === 'demo'
             ? !!demographics[DATA.demographics[demoIndex].id]
-            : !!answers[DATA.questions[qIndex].id];
+            : hasQuestionChoice(answers[DATA.questions[qIndex].id]);
           if (canAdvance) { e.preventDefault(); goNext(); }
         } else if (e.key === 'ArrowLeft') {
           e.preventDefault(); goBack();
@@ -494,6 +512,9 @@ function SlideTransition({ keyName, dir, children }) {
 
 /* ------------------------- welcome --------------------------------- */
 function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
+  const demoCount = DATA.demographics?.length || 0;
+  const questionCount = DATA.questions?.length || 0;
+  const groupCount = DATA.groups?.length || 0;
   return (
     <div className="max-w-2xl mx-auto px-5 sm:px-8 pt-12 sm:pt-20 pb-32">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-6">
@@ -506,15 +527,15 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
       </h1>
 
       <p className="mt-8 text-[15px] sm:text-base leading-relaxed text-ink/80 max-w-xl">
-        Bài đánh giá dài <strong className="font-medium">15 câu hỏi</strong> giúp bạn định vị
+        Bài đánh giá gồm <strong className="font-medium">{questionCount} câu maturity</strong> giúp bạn định vị
         dự án trên thang trưởng thành 5 mức (CMMI điều chỉnh cho AI-assisted development).
-        Bạn sẽ nhận được điểm tổng, profile radar 13 chiều, và khuyến nghị cụ thể cho bước
+        Bạn sẽ nhận được điểm tổng theo trọng số, profile radar {groupCount} nhóm, và khuyến nghị cụ thể cho bước
         tiếp theo.
       </p>
 
       <dl className="mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-line/60 pt-8">
-        <Stat label="Thời gian" value="~10 phút" />
-        <Stat label="Câu hỏi" value="2 + 13" />
+        <Stat label="Thời gian" value="~12 phút" />
+        <Stat label="Câu hỏi" value={`${demoCount} + ${questionCount}`} />
         <Stat label="Lưu trữ" value="Ẩn danh" />
       </dl>
 
@@ -613,6 +634,8 @@ function DemographicScreen({ step, spec, value, onChange, onNext, onBack }) {
 /* ------------------------- question -------------------------------- */
 function QuestionScreen({ sessionId, index, total, question, value, onChange, onNext, onBack, isLast }) {
   const [popover, setPopover] = useState(false);
+  const group = getGroup(question.group);
+  const openResponse = question.open_response || DATA.open_response || {};
 
   // Stable shuffle keyed by session + question id
   const shuffledOptions = useMemo(() => {
@@ -620,14 +643,28 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
     return seededShuffle(question.options.map((o, i) => ({ ...o, originalIndex: i })), seed);
   }, [sessionId, question.id]);
 
-  // include a "Chưa áp dụng" pseudo-option (level: null -> scored as 1)
-  const NA = { level: null, text: 'Chưa áp dụng trong dự án', isNA: true };
+  const NA = {
+    level: null,
+    score: 0,
+    text: DATA.scoring?.not_applicable?.label || 'Chưa áp dụng trong dự án',
+    isNA: true,
+  };
+  const updateAnswer = (patch) => onChange({ ...(value || {}), ...patch });
+  const hasChoice = hasQuestionChoice(value);
 
   return (
     <div className="pt-10 sm:pt-16">
       <div className="flex items-center justify-between mb-3">
-        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-          Câu {index + 1} / {total} <span className="text-ink/30 mx-1">·</span> {question.short}
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            Câu {index + 1} / {total} <span className="text-ink/30 mx-1">·</span> {question.short}
+          </div>
+          {group && (
+            <div className="mt-2 inline-flex items-center gap-2 border border-line rounded-sm px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted bg-line/20">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent"></span>
+              {group.name}
+            </div>
+          )}
         </div>
         <button
           onClick={() => setPopover(p => !p)}
@@ -663,7 +700,13 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
             <RadioRow
               key={opt.originalIndex}
               checked={selected}
-              onSelect={() => onChange({ level: opt.level, originalIndex: opt.originalIndex, displayIndex: displayIdx, isNA: false })}
+              onSelect={() => updateAnswer({
+                level: opt.level,
+                score: getOptionScore(opt),
+                originalIndex: opt.originalIndex,
+                displayIndex: displayIdx,
+                isNA: false,
+              })}
               label={opt.text}
               name={'q-' + question.id}
             />
@@ -673,7 +716,7 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
         <div className="pt-3 mt-3 border-t border-dashed border-line">
           <RadioRow
             checked={value?.isNA === true}
-            onSelect={() => onChange({ level: null, originalIndex: -1, displayIndex: -1, isNA: true })}
+            onSelect={() => updateAnswer({ level: null, score: 0, originalIndex: -1, displayIndex: -1, isNA: true })}
             label={NA.text}
             name={'q-' + question.id}
             muted
@@ -681,10 +724,29 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
         </div>
       </fieldset>
 
+      {openResponse.enabled !== false && (
+        <div className="mt-7">
+          <label
+            htmlFor={'comment-' + question.id}
+            className="block font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2"
+          >
+            {openResponse.label || 'Bổ sung bối cảnh (tuỳ chọn)'}
+          </label>
+          <textarea
+            id={'comment-' + question.id}
+            value={value?.comment || ''}
+            onChange={(e) => updateAnswer({ comment: e.target.value })}
+            placeholder={openResponse.placeholder || 'Thêm bối cảnh nếu cần.'}
+            rows={3}
+            className="w-full resize-y rounded-sm border border-line bg-paper px-4 py-3 text-[14px] leading-relaxed text-ink placeholder:text-muted/70 focus:border-ink/50 transition-colors"
+          />
+        </div>
+      )}
+
       <NavRow
         onBack={onBack}
         onNext={onNext}
-        canNext={!!value}
+        canNext={hasChoice}
         nextLabel={isLast ? 'Hoàn thành & xem kết quả' : 'Tiếp theo'}
       />
     </div>
@@ -769,22 +831,96 @@ function SavedToast({ visible }) {
 function computeSummary(answers, demographics) {
   const scored = DATA.questions.map(q => {
     const a = answers[q.id];
-    const score = a ? (a.isNA ? 1 : (a.level || 1)) : 1;
-    return { id: q.id, topic: q.topic, short: q.short, score, isNA: a?.isNA === true, answered: !!a };
+    const weight = getQuestionWeight(q);
+    const possibleMax = getMaxRawScore(q) * weight;
+    const answered = hasQuestionChoice(a);
+    const isNA = a?.isNA === true;
+    const rawScore = answered && !isNA ? Number(a.score ?? a.level ?? 0) : 0;
+    const maxPoints = answered && !isNA ? possibleMax : 0;
+    const points = answered && !isNA ? rawScore * weight : 0;
+    return {
+      id: q.id,
+      group: q.group,
+      topic: q.topic,
+      short: q.short,
+      weight,
+      level: answered && !isNA ? Number(a.level) : null,
+      rawScore,
+      points,
+      maxPoints,
+      possibleMax,
+      isNA,
+      answered,
+      comment: a?.comment || '',
+    };
   });
-  const total = scored.reduce((s, x) => s + x.score, 0);
-  const avg = total / DATA.questions.length;
-  const tier = tierFor(avg);
-  const warnings = computeWarnings(scored, demographics);
-  return { scored, total, avg, tier, warnings };
+  const total = scored.reduce((s, x) => s + x.points, 0);
+  const maxScore = scored.reduce((s, x) => s + x.maxPoints, 0);
+  const percent = maxScore > 0 ? (total / maxScore) * 100 : 0;
+  const tier = tierFor(percent);
+  const groupSummaries = computeGroupSummaries(scored);
+  const warnings = computeWarnings(scored, demographics, { total, maxScore, percent, groupSummaries });
+  const applicableCount = scored.filter(s => s.answered && !s.isNA).length;
+  return {
+    scored,
+    total,
+    maxScore,
+    percent,
+    tier,
+    warnings,
+    groupSummaries,
+    applicableCount,
+    totalQuestions: DATA.questions.length,
+  };
 }
 
-function computeWarnings(scored, demographics) {
+function computeGroupSummaries(scored) {
+  const groups = DATA.groups || [];
+  return groups.map(group => {
+    const items = scored.filter(s => s.group === group.id);
+    const total = items.reduce((sum, item) => sum + item.points, 0);
+    const maxScore = items.reduce((sum, item) => sum + item.maxPoints, 0);
+    const percent = maxScore > 0 ? (total / maxScore) * 100 : 0;
+    return {
+      ...group,
+      questionCount: items.length,
+      applicableCount: items.filter(item => item.answered && !item.isNA).length,
+      total,
+      maxScore,
+      percent,
+      score: percent / 20,
+    };
+  });
+}
+
+function collectOpenResponses(answers) {
+  return DATA.questions
+    .map(q => ({
+      questionId: q.id,
+      group: q.group,
+      topic: q.topic,
+      comment: (answers[q.id]?.comment || '').trim(),
+    }))
+    .filter(r => r.comment);
+}
+
+function buildSubmission(sessionId, demographics, answers) {
+  return {
+    sessionId,
+    submittedAt: new Date().toISOString(),
+    demographics,
+    answers, // anonymized — no PII collected
+    openResponses: collectOpenResponses(answers),
+    summary: computeSummary(answers, demographics),
+  };
+}
+
+function computeWarnings(scored, demographics, summary) {
   const get = (id) => scored.find(s => s.id === id);
   const warnings = [];
-  const q1 = get(1), q3 = get(3), q5 = get(5), q10 = get(10), q11 = get(11), q12 = get(12);
+  const q1 = get(1), q3 = get(3), q5 = get(5), q6 = get(6), q7 = get(7), q9 = get(9), q10 = get(10), q11 = get(11), q12 = get(12);
 
-  if (q1.score >= 4 && q11.score <= 2) {
+  if (q1?.level >= 4 && q11?.level != null && q11.level <= 2) {
     warnings.push({
       key: 'q1-q11',
       title: 'Ước lượng cao nhưng cost observability thấp',
@@ -792,7 +928,7 @@ function computeWarnings(scored, demographics) {
       refs: [1, 11],
     });
   }
-  if (q3.score >= 4 && q10.score <= 2) {
+  if (q3?.level >= 4 && q10?.level != null && q10.level <= 2) {
     warnings.push({
       key: 'q3-q10',
       title: 'Phát hiện lỗi tốt nhưng chưa có eval framework',
@@ -800,9 +936,25 @@ function computeWarnings(scored, demographics) {
       refs: [3, 10],
     });
   }
-  const teamSmall = demographics.a1 === '1–3 người' || demographics.a1 === '4–10 người';
-  const newProject = demographics.a2 === '<3 tháng';
-  if (q5.score >= 4 && teamSmall && newProject) {
+  if (q6?.level >= 4 && q9?.level != null && q9.level <= 2) {
+    warnings.push({
+      key: 'q6-q9',
+      title: 'Harness cao nhưng runtime security thấp',
+      detail: 'Harness trưởng thành mà sandbox/permission còn yếu là rủi ro vận hành lớn. Nên xem lại quyền tool, secret và audit trail trước khi mở rộng agent.',
+      refs: [6, 9],
+    });
+  }
+  if (q7?.level >= 4 && q10?.level != null && q10.level <= 2) {
+    warnings.push({
+      key: 'q7-q10',
+      title: 'Model selection cao nhưng eval thấp',
+      detail: 'Chọn model theo task mà chưa có eval baseline dễ trở thành cảm tính nâng cao. Nên có bộ task nội bộ trước khi tin vào routing/model policy.',
+      refs: [7, 10],
+    });
+  }
+  const teamSmall = demographics.a2 === '1–3 người' || demographics.a2 === '4–10 người';
+  const newProject = demographics.a3 === '<3 tháng';
+  if (q5?.level >= 4 && teamSmall && newProject) {
     warnings.push({
       key: 'q5-context',
       title: 'Catalog skill enterprise cần thời gian tích lũy',
@@ -811,8 +963,7 @@ function computeWarnings(scored, demographics) {
     });
   }
   // Q12 L2 anti-pattern
-  const q12Ans = scored.find(s => s.id === 12);
-  if (q12Ans && q12Ans.score === 2) {
+  if (q12?.level === 2) {
     warnings.push({
       key: 'q12-l2',
       title: 'Parallel swarm thường là anti-pattern',
@@ -820,16 +971,25 @@ function computeWarnings(scored, demographics) {
       refs: [12],
     });
   }
+  const naCount = scored.filter(s => s.isNA).length;
+  if (naCount >= 4) {
+    warnings.push({
+      key: 'many-na',
+      title: 'Nhiều câu chưa áp dụng',
+      detail: `Có ${naCount} câu được đánh dấu N/A nên điểm tối đa áp dụng đã giảm. Kết quả vẫn hợp lệ, nhưng nên đọc như snapshot phạm vi hiện tại chứ không phải maturity toàn diện.`,
+      refs: scored.filter(s => s.isNA).map(s => s.id),
+    });
+  }
   return warnings;
 }
 
 function ResultScreen({ demographics, answers, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
   const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
-  const { scored, total, avg, tier, warnings } = summary;
+  const { scored, total, maxScore, percent, tier, warnings, groupSummaries, applicableCount, totalQuestions } = summary;
 
-  const radarData = scored.map(s => ({
+  const radarData = groupSummaries.map(s => ({
     topic: s.short,
-    fullTopic: s.topic,
+    fullTopic: s.name,
     score: s.score,
   }));
 
@@ -843,20 +1003,38 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
       demographics,
       responses: DATA.questions.map(q => {
         const a = answers[q.id];
+        const selectedOption = Number.isInteger(a?.originalIndex) && a.originalIndex >= 0
+          ? q.options[a.originalIndex]
+          : null;
+        const scoredItem = scored.find(s => s.id === q.id);
+        const group = getGroup(q.group);
         return {
           questionId: q.id,
+          groupId: q.group,
+          groupName: group?.name || q.group,
           topic: q.topic,
           selectedLevel: a?.isNA ? null : (a?.level ?? null),
+          selectedOptionText: selectedOption?.text || null,
           notApplicable: a?.isNA === true,
-          score: a ? (a.isNA ? 1 : (a.level || 1)) : 1,
+          rawScore: scoredItem?.rawScore ?? 0,
+          weight: scoredItem?.weight ?? getQuestionWeight(q),
+          weightedScore: scoredItem?.points ?? 0,
+          maxScore: scoredItem?.maxPoints ?? 0,
+          possibleMaxScore: scoredItem?.possibleMax ?? getMaxRawScore(q) * getQuestionWeight(q),
+          comment: a?.comment || '',
         };
       }),
       scoring: {
         total,
-        average: Number(avg.toFixed(2)),
+        maxScore,
+        percent: Number(percent.toFixed(1)),
+        applicableQuestions: applicableCount,
+        totalQuestions,
         tier: tier.name,
         tierRecommendation: tier.recommendation,
+        groupSummaries,
       },
+      openResponses: collectOpenResponses(answers),
       warnings,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -888,13 +1066,16 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
 
       {/* Score block */}
       <div className="mt-10 grid grid-cols-2 gap-6 sm:gap-8 border-t border-b border-line/60 py-8">
-        <ScoreStat label="Tổng điểm" value={total} suffix="/ 65" />
-        <ScoreStat label="Trung bình" value={avg.toFixed(1)} suffix="/ 5.0" />
+        <ScoreStat label="Tổng điểm" value={formatScore(total)} suffix={`/ ${formatScore(maxScore)}`} />
+        <ScoreStat label="Tỷ lệ" value={percent.toFixed(0)} suffix="/ 100%" />
       </div>
+      <p className="mt-3 text-[12px] text-muted leading-relaxed">
+        Điểm tối đa được tính trên {applicableCount}/{totalQuestions} câu áp dụng; câu N/A không bị phạt và không cộng vào mẫu điểm.
+      </p>
 
       {/* Radar */}
       <section className="mt-12">
-        <SectionTitle eyebrow="Profile 13 chiều" title="Bản đồ radar" />
+        <SectionTitle eyebrow={`Profile ${groupSummaries.length} nhóm`} title="Bản đồ radar" />
         <div className="mt-6 -mx-3 sm:-mx-6">
           <RadarBlock data={radarData} dark={dark} />
         </div>
@@ -945,22 +1126,36 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
             Preview mode · chỉ người tạo thấy
           </div>
-          <SectionTitle eyebrow="13 chiều đo lường" title="Chi tiết từng câu" />
+          <SectionTitle eyebrow={`${DATA.questions.length} câu · weighted scoring`} title="Chi tiết từng câu" />
           <ol className="mt-6 space-y-3">
             {scored.map((s, idx) => {
               const q = DATA.questions[idx];
+              const group = getGroup(q.group);
               return (
                 <li key={s.id} className="border border-line rounded-sm">
                   <div className="px-4 sm:px-5 py-4 flex items-start gap-4">
                     <div className="font-mono text-[11px] text-muted pt-0.5 w-6 shrink-0 tabular-nums">{String(s.id).padStart(2, '0')}</div>
                     <div className="flex-1 min-w-0">
+                      {group && (
+                        <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted mb-1.5">
+                          {group.name}
+                        </div>
+                      )}
                       <div className="font-display font-medium text-[15px] leading-snug">{q.topic}</div>
                       <div className="mt-2 flex items-center gap-3">
-                        <LevelDots score={s.score} />
+                        <LevelDots score={s.level || 0} />
                         <div className="font-mono text-[11px] text-muted">
-                          L{s.score}{s.isNA ? ' · N/A' : ''}
+                          {s.isNA
+                            ? `N/A · excluded · w${s.weight}`
+                            : `L${s.level} · ${formatScore(s.points)}/${formatScore(s.maxPoints)} điểm · w${s.weight}`}
                         </div>
                       </div>
+                      {s.comment && (
+                        <p className="mt-3 text-[12.5px] leading-relaxed text-ink/75 border-l-2 border-line pl-3">
+                          <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Bối cảnh →</span>
+                          {s.comment}
+                        </p>
+                      )}
                       <p className="mt-3 text-[12.5px] leading-relaxed text-ink/70">
                         <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Lưu ý phổ biến →</span>
                         {q.note}
