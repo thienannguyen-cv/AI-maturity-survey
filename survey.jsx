@@ -43,7 +43,7 @@ const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
  *           ResultScreen, nhưng VẪN gửi đầy đủ warnings trong email payload.
  * Đổi cờ này khi chuyển môi trường; không cần đổi gì khác.
  */
-const DEPLOY = false;
+const DEPLOY = true;
 
 /* ------------------------- storage wrapper -------------------------- */
 // window.storage in Claude artifacts; localStorage fallback for preview.

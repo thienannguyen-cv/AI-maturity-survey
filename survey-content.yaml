@@ -59,13 +59,6 @@ demographics:
       - "Sản phẩm khách hàng dùng, rủi ro trung bình"
       - "Hệ thống ảnh hưởng dữ liệu nhạy cảm, tài chính, bảo mật hoặc pháp lý"
       - "Nền tảng/core service nhiều team phụ thuộc"
-  - id: a6
-    label: "Nền tảng delivery hiện tại trước khi xét đến AI mạnh đến đâu?"
-    options:
-      - "Test/CI chưa ổn định, review chủ yếu thủ công"
-      - "Có CI cơ bản, test còn mỏng hoặc không đều"
-      - "Có test, review và release checklist tương đối ổn định"
-      - "Có quality gates, observability và rollback/release discipline rõ"
 
 groups:
   - id: planning
