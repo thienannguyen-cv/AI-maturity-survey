@@ -4,7 +4,7 @@
 
 survey:
   version: "1.1"
-  title: "Độ trưởng thành tích hợp AI trong dự án phần mềm"
+  title: "Khảo sát mức độ trưởng thành của việc tích hợp AI trong dự án phần mềm"
 
 scoring:
   scale_max: 5
@@ -176,7 +176,7 @@ questions:
     topic: "Readiness trước khi giao việc cho agent"
     short: "Readiness"
     text: |-
-      Trước khi một agent bắt đầu làm ticket, team yêu cầu những thông tin tối thiểu nào để giảm hiểu sai và rework?
+      Trước khi một ticket được giao cho dev sử dụng agent, team yêu cầu ticket đó phải có những thông tin tối thiểu nào để giảm hiểu sai và giảm rework trong review/verify?
     measure: "Mức độ trưởng thành của definition of ready cho AI-assisted delivery."
     note: |-
       Prompt tốt không thay thế được một ticket mơ hồ. Readiness là trách nhiệm delivery, không chỉ là kỹ năng prompt của dev.
