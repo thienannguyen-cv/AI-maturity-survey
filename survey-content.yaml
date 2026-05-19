@@ -544,7 +544,7 @@ questions:
       Khi dự án dùng nhiều agent/subagent hoặc nhiều workflow AI song song, việc phối hợp được tổ chức ra sao?
     measure: "Mức độ kiểm soát phối hợp giữa các agent và quyền ghi vào codebase."
     note: |-
-      Nhiều agent không tự động trưởng thành hơn. Điều quan trọng là ownership, quyền ghi và verification rõ.
+      Nhiều agent không phải lúc nào cũng đồng nghĩa với tốt hơn. Điều quan trọng là ownership, quyền ghi và verification rõ.
     options:
       - level: 1
         score: 1
