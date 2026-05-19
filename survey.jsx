@@ -683,7 +683,7 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
       {popover && (
         <div role="region" aria-label="Lưu ý phổ biến" className="mt-5 border-l-2 border-ink pl-4 py-2 bg-line/30 rounded-r-sm">
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
-            <span>Lưu ý phổ biến từ tác giả</span>
+            <span>Nhận thức chung</span>
             <button onClick={() => setPopover(false)} className="text-muted hover:text-ink" aria-label="Đóng">
               <X size={12} />
             </button>
