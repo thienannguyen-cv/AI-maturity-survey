@@ -7,7 +7,17 @@ const {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
 } = Recharts;
 
-const DATA = window.SURVEY_DATA;
+// DATA reads through to window.SURVEY_DATA at access time so the async
+// YAML loader can hydrate it after this script has parsed.
+const DATA = new Proxy({}, {
+  get: (_t, key) => window.SURVEY_DATA?.[key],
+  has: (_t, key) => key in (window.SURVEY_DATA || {}),
+  ownKeys: () => Object.keys(window.SURVEY_DATA || {}),
+  getOwnPropertyDescriptor: (_t, key) => {
+    if (!window.SURVEY_DATA) return undefined;
+    return Object.getOwnPropertyDescriptor(window.SURVEY_DATA, key);
+  },
+});
 const SESSION_KEY = 'ai-maturity:session';
 const SHARED_KEY = 'ai-maturity:submissions';
 
@@ -415,6 +425,7 @@ function Survey() {
               onRetry={retrySubmit}
               endpointEnabled={!!SUBMISSION_ENDPOINT}
               deploy={DEPLOY}
+              dark={dark}
             />
           )}
         </div>
@@ -812,7 +823,7 @@ function computeWarnings(scored, demographics) {
   return warnings;
 }
 
-function ResultScreen({ demographics, answers, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy }) {
+function ResultScreen({ demographics, answers, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
   const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
   const { scored, total, avg, tier, warnings } = summary;
 
@@ -885,7 +896,7 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
       <section className="mt-12">
         <SectionTitle eyebrow="Profile 13 chiều" title="Bản đồ radar" />
         <div className="mt-6 -mx-3 sm:-mx-6">
-          <RadarBlock data={radarData} />
+          <RadarBlock data={radarData} dark={dark} />
         </div>
       </section>
 
@@ -1072,7 +1083,7 @@ function LevelDots({ score }) {
   );
 }
 
-function RadarBlock({ data }) {
+function RadarBlock({ data, dark }) {
   // Mobile responsive height
   const [height, setHeight] = useState(380);
   useEffect(() => {
@@ -1085,10 +1096,12 @@ function RadarBlock({ data }) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const isDark = document.documentElement.classList.contains('dark');
-  const inkColor = isDark ? '#e8e5dd' : '#1c2230';
-  const lineColor = isDark ? '#3a3f4a' : '#dfd9cd';
-  const accentColor = isDark ? '#7fb5ba' : '#3a6f76';
+  // Reactive to theme — use prop, not one-shot DOM read.
+  // Dark labels need significantly more brightness than the body ink color
+  // (`#e8e5dd`) to read crisply against the dark paper background.
+  const inkColor   = dark ? '#f5f0e6' : '#1c2230';
+  const lineColor  = dark ? '#4a4f5a' : '#dfd9cd';
+  const accentColor = dark ? '#9fcfd4' : '#3a6f76';
 
   return (
     <div style={{ width: '100%', height }}>
