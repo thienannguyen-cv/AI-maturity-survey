@@ -1263,7 +1263,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
           </div>
           <SectionTitle eyebrow={`${warnings.length} tín hiệu phát hiện`} title="Đáng xem lại" />
           <p className="mt-4 text-[14px] text-ink/75 leading-relaxed max-w-2xl">
-            Hệ thống đối chiếu chéo các câu trả lời để tìm mẫu <em>"false high"</em> — những chỗ respondent tự đánh giá cao ở một chiều nhưng các chiều bổ trợ lại thấp, hoặc bối cảnh team/dự án chưa đủ để đạt mức đó. Khi <code className="font-mono text-[12px]">DEPLOY=true</code>, section này được ẩn khỏi người tham gia; warnings vẫn được gửi đầy đủ trong email gửi về bạn.
+            Hệ thống đối chiếu chéo các câu trả lời để tìm mẫu <em>"false high"</em> — những chỗ respondent tự đánh giá cao ở một chiều nhưng các chiều bổ trợ lại thấp, hoặc bối cảnh team/dự án chưa đủ để đạt mức đó.
           </p>
           <ul className="mt-6 space-y-3">
             {warnings.map(w => (
