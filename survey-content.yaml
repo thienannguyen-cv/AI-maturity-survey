@@ -34,6 +34,14 @@ open_response:
   label: "Bổ sung bối cảnh (tuỳ chọn)"
   placeholder: "Ví dụ: artifact đang có, cách team đang làm, lý do bạn chọn mức này, hoặc điểm bạn còn phân vân."
 
+survey_feedback:
+  enabled: true
+  title: "Góp ý & cải thiện"
+  eyebrow: "Phần cuối · không tính điểm"
+  description: |-
+    Nếu có điểm nào trong bài survey mà bạn cảm thấy chưa đúng, cần sự thay đổi, hoặc bạn muốn đề xuất thêm tiêu chí/cách diễn đạt, hãy ghi lại ở đây. Phản hồi này giúp cải thiện chất lượng survey cho các vòng sau.
+  placeholder: "Ví dụ: Câu nào khó hiểu? Có tiêu chí nào thiếu? Cách chia weight có hợp lý không? Có option nào chưa phản ánh đúng thực tế dự án của bạn?"
+
 demographics:
   - id: a1
     label: "Vai trò gần nhất của bạn trong dự án này là gì?"

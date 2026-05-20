@@ -148,13 +148,15 @@ function Survey() {
   // bootstrapping: load saved session
   const [booted, setBooted] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [stage, setStage] = useState('welcome'); // welcome | demo | question | result
+  const [stage, setStage] = useState('welcome'); // welcome | demo | question | feedback | result
   const [demoIndex, setDemoIndex] = useState(0); // 0..1
   const [qIndex, setQIndex] = useState(0);
   const [demographics, setDemographics] = useState({});
   const [answers, setAnswers] = useState({});     // {qId: {level, score, originalIndex, isNA, comment}}
+  const [surveyFeedback, setSurveyFeedback] = useState('');
   const [dark, setDark] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [resumeTargetStage, setResumeTargetStage] = useState(null);
   const [savedFlash, setSavedFlash] = useState(false);
   const [slideDir, setSlideDir] = useState(1);
   const [submitState, setSubmitState] = useState('idle'); // idle | sending | sent | error | skipped
@@ -174,9 +176,11 @@ function Survey() {
         setSessionId(saved.sessionId);
         setDemographics(saved.demographics || {});
         setAnswers(saved.answers || {});
+        setSurveyFeedback(saved.surveyFeedback || '');
         setStage('welcome');
         setDemoIndex(saved.demoIndex || 0);
         setQIndex(saved.qIndex || 0);
+        setResumeTargetStage(saved.stage || null);
         setShowResume(true);
       } else {
         setSessionId(makeSessionId());
@@ -195,7 +199,7 @@ function Survey() {
   const persist = useCallback(async (overrides = {}) => {
     if (!sessionId) return;
     const snapshot = {
-      sessionId, stage, demoIndex, qIndex, demographics, answers,
+      sessionId, stage, demoIndex, qIndex, demographics, answers, surveyFeedback,
       ...overrides,
       updatedAt: new Date().toISOString(),
     };
@@ -204,7 +208,7 @@ function Survey() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
     setSavedFlash(true);
     savedTimer.current = setTimeout(() => setSavedFlash(false), 1400);
-  }, [sessionId, stage, demoIndex, qIndex, demographics, answers]);
+  }, [sessionId, stage, demoIndex, qIndex, demographics, answers, surveyFeedback]);
 
   /* ---------- handlers ---------- */
   const startFresh = async () => {
@@ -212,16 +216,19 @@ function Survey() {
     setSessionId(sid);
     setDemographics({});
     setAnswers({});
+    setSurveyFeedback('');
     setDemoIndex(0);
     setQIndex(0);
     setShowResume(false);
+    setResumeTargetStage(null);
     setStage('demo');
     setSlideDir(1);
-    await storage.set(SESSION_KEY, { sessionId: sid, stage: 'demo', demoIndex: 0, qIndex: 0, demographics: {}, answers: {}, updatedAt: new Date().toISOString() });
+    await storage.set(SESSION_KEY, { sessionId: sid, stage: 'demo', demoIndex: 0, qIndex: 0, demographics: {}, answers: {}, surveyFeedback: '', updatedAt: new Date().toISOString() });
   };
   const resume = () => {
     setShowResume(false);
-    if (qIndex > 0 || Object.keys(answers).length > 0) setStage('question');
+    if (resumeTargetStage === 'feedback') setStage('feedback');
+    else if (qIndex > 0 || Object.keys(answers).length > 0) setStage('question');
     else if (Object.keys(demographics).length > 0) setStage('demo');
     else setStage('demo');
   };
@@ -236,20 +243,32 @@ function Survey() {
     setAnswers(next);
     persist({ answers: next });
   };
+  const setFeedbackAnswer = (value) => {
+    setSurveyFeedback(value);
+    persist({ surveyFeedback: value });
+  };
 
   const goNext = () => {
     setSlideDir(1);
+    const feedbackEnabled = DATA.survey_feedback?.enabled !== false;
     if (stage === 'demo') {
       if (demoIndex < DATA.demographics.length - 1) { setDemoIndex(demoIndex + 1); persist({ demoIndex: demoIndex + 1 }); }
       else { setStage('question'); setQIndex(0); persist({ stage: 'question', qIndex: 0 }); }
     } else if (stage === 'question') {
       if (qIndex < DATA.questions.length - 1) { setQIndex(qIndex + 1); persist({ qIndex: qIndex + 1 }); }
+      else if (feedbackEnabled) { setStage('feedback'); persist({ stage: 'feedback' }); }
       else { submit(); }
+    } else if (stage === 'feedback') {
+      submit();
     }
   };
   const goBack = () => {
     setSlideDir(-1);
-    if (stage === 'question') {
+    if (stage === 'feedback') {
+      setStage('question');
+      setQIndex(DATA.questions.length - 1);
+      persist({ stage: 'question', qIndex: DATA.questions.length - 1 });
+    } else if (stage === 'question') {
       if (qIndex > 0) { setQIndex(qIndex - 1); persist({ qIndex: qIndex - 1 }); }
       else { setStage('demo'); setDemoIndex(DATA.demographics.length - 1); persist({ stage: 'demo', demoIndex: DATA.demographics.length - 1 }); }
     } else if (stage === 'demo') {
@@ -284,6 +303,7 @@ function Survey() {
         warnings: summary.warnings.map(w => `${w.title} [${w.refs.map(r => 'Q' + r).join(', ')}]`).join(' · '),
         open_responses_count: submission.openResponses.length,
         open_responses: submission.openResponses.map(r => `Q${r.questionId}: ${r.comment}`).join('\n---\n'),
+        survey_feedback: submission.surveyFeedback || '',
         _subject: `AI Maturity · ${summary.tier.name} (${summary.percent.toFixed(0)}%) · ${submission.sessionId.slice(0, 12)}`,
         full_payload_json: JSON.stringify(submission),
       };
@@ -307,7 +327,7 @@ function Survey() {
   }, []);
 
   const submit = async () => {
-    const submission = buildSubmission(sessionId, demographics, answers);
+    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback);
     // Local shared storage (works even when endpoint is disabled/down)
     const prev = (await storage.get(SHARED_KEY, true)) || [];
     const list = Array.isArray(prev) ? prev : [];
@@ -323,9 +343,9 @@ function Survey() {
   };
 
   const retrySubmit = useCallback(() => {
-    const submission = buildSubmission(sessionId, demographics, answers);
+    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback);
     sendToEndpoint(submission);
-  }, [sessionId, demographics, answers, sendToEndpoint]);
+  }, [sessionId, demographics, answers, surveyFeedback, sendToEndpoint]);
 
   const restart = async () => {
     await storage.remove(SESSION_KEY);
@@ -333,9 +353,11 @@ function Survey() {
     setSessionId(sid);
     setDemographics({});
     setAnswers({});
+    setSurveyFeedback('');
     setDemoIndex(0);
     setQIndex(0);
     setShowResume(false);
+    setResumeTargetStage(null);
     setSlideDir(1);
     setSubmitState('idle');
     setSubmitError(null);
@@ -343,22 +365,26 @@ function Survey() {
   };
 
   /* ---------- derived ---------- */
-  const totalSteps = DATA.demographics.length + DATA.questions.length;
+  const feedbackEnabled = DATA.survey_feedback?.enabled !== false;
+  const totalSteps = DATA.demographics.length + DATA.questions.length + (feedbackEnabled ? 1 : 0);
   const currentStep =
     stage === 'welcome' ? 0
     : stage === 'demo' ? demoIndex + 1
     : stage === 'question' ? DATA.demographics.length + qIndex + 1
+    : stage === 'feedback' ? totalSteps
     : totalSteps;
 
   /* ---------- keyboard ---------- */
   useEffect(() => {
     const onKey = (e) => {
       if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') return;
-      if (stage === 'question' || stage === 'demo') {
+      if (stage === 'question' || stage === 'demo' || stage === 'feedback') {
         if (e.key === 'ArrowRight' || e.key === 'Enter') {
           const canAdvance = stage === 'demo'
             ? !!demographics[DATA.demographics[demoIndex].id]
-            : hasQuestionChoice(answers[DATA.questions[qIndex].id]);
+            : stage === 'question'
+              ? hasQuestionChoice(answers[DATA.questions[qIndex].id])
+              : true;
           if (canAdvance) { e.preventDefault(); goNext(); }
         } else if (e.key === 'ArrowLeft') {
           e.preventDefault(); goBack();
@@ -367,7 +393,7 @@ function Survey() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stage, demoIndex, qIndex, demographics, answers]);
+  }, [stage, demoIndex, qIndex, demographics, answers, surveyFeedback]);
 
   if (!booted) {
     return (
@@ -389,7 +415,9 @@ function Survey() {
             onResume={showResume ? resume : null}
             resumePosition={
               stage === 'welcome' && showResume
-                ? (qIndex > 0 || Object.keys(answers).length > 0
+                ? (resumeTargetStage === 'feedback'
+                    ? 'Phần góp ý cải thiện'
+                    : qIndex > 0 || Object.keys(answers).length > 0
                     ? `Câu ${qIndex + 1} / ${DATA.questions.length}`
                     : `Phần bối cảnh ${demoIndex + 1}/${DATA.demographics.length}`)
                 : null
@@ -397,7 +425,7 @@ function Survey() {
           />
         )}
 
-        {(stage === 'demo' || stage === 'question') && (
+        {(stage === 'demo' || stage === 'question' || stage === 'feedback') && (
           <ProgressBar current={currentStep} total={totalSteps} />
         )}
 
@@ -428,6 +456,18 @@ function Survey() {
                 onNext={goNext}
                 onBack={goBack}
                 isLast={qIndex === DATA.questions.length - 1}
+                nextLabel={qIndex === DATA.questions.length - 1 && feedbackEnabled ? 'Tiếp đến góp ý' : null}
+              />
+            </SlideTransition>
+          )}
+
+          {stage === 'feedback' && (
+            <SlideTransition keyName="feedback" dir={slideDir}>
+              <SurveyFeedbackScreen
+                value={surveyFeedback}
+                onChange={setFeedbackAnswer}
+                onNext={goNext}
+                onBack={goBack}
               />
             </SlideTransition>
           )}
@@ -436,6 +476,7 @@ function Survey() {
             <ResultScreen
               demographics={demographics}
               answers={answers}
+              surveyFeedback={surveyFeedback}
               sessionId={sessionId}
               onRestart={restart}
               submitState={submitState}
@@ -663,7 +704,7 @@ function DemographicScreen({ step, spec, value, onChange, onNext, onBack }) {
 }
 
 /* ------------------------- question -------------------------------- */
-function QuestionScreen({ sessionId, index, total, question, value, onChange, onNext, onBack, isLast }) {
+function QuestionScreen({ sessionId, index, total, question, value, onChange, onNext, onBack, isLast, nextLabel }) {
   const [popover, setPopover] = useState(false);
   const group = getGroup(question.group);
   const openResponse = question.open_response || DATA.open_response || {};
@@ -778,7 +819,55 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
         onBack={onBack}
         onNext={onNext}
         canNext={hasChoice}
-        nextLabel={isLast ? 'Hoàn thành & xem kết quả' : 'Tiếp theo'}
+        nextLabel={nextLabel || (isLast ? 'Hoàn thành & xem kết quả' : 'Tiếp theo')}
+      />
+    </div>
+  );
+}
+
+/* ------------------------- survey feedback -------------------------- */
+function SurveyFeedbackScreen({ value, onChange, onNext, onBack }) {
+  const spec = DATA.survey_feedback || {};
+  return (
+    <div className="pt-10 sm:pt-16">
+      <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-3">
+        {spec.eyebrow || 'Phần cuối · không tính điểm'}
+      </div>
+      <h2 className="font-display font-medium text-[24px] sm:text-[28px] leading-[1.2] tracking-tight text-balance mb-4">
+        {spec.title || 'Góp ý cải thiện'}
+      </h2>
+      {spec.description && (
+        <p className="text-[15px] text-ink/80 leading-relaxed max-w-xl">
+          {spec.description}
+        </p>
+      )}
+
+      <div className="mt-8">
+        <label
+          htmlFor="survey-feedback"
+          className="block font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2"
+        >
+          Góp ý cải thiện
+        </label>
+        <textarea
+          id="survey-feedback"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={spec.placeholder || 'Bạn có góp ý nào để cải thiện survey không?'}
+          rows={7}
+          className="w-full resize-y rounded-sm border border-line bg-paper px-4 py-3 text-[14px] leading-relaxed text-ink placeholder:text-muted/70 focus:border-ink/50 transition-colors"
+        />
+      </div>
+
+      <p className="mt-3 text-[12px] leading-relaxed text-muted">
+        Phần này không bắt buộc và không ảnh hưởng đến điểm maturity.
+      </p>
+
+      <NavRow
+        onBack={onBack}
+        onNext={onNext}
+        canNext={true}
+        nextLabel="Hoàn thành & xem kết quả"
       />
     </div>
   );
@@ -935,13 +1024,14 @@ function collectOpenResponses(answers) {
     .filter(r => r.comment);
 }
 
-function buildSubmission(sessionId, demographics, answers) {
+function buildSubmission(sessionId, demographics, answers, surveyFeedback = '') {
   return {
     sessionId,
     submittedAt: new Date().toISOString(),
     demographics,
     answers, // anonymized — no PII collected
     openResponses: collectOpenResponses(answers),
+    surveyFeedback: (surveyFeedback || '').trim(),
     summary: computeSummary(answers, demographics),
   };
 }
@@ -1030,7 +1120,7 @@ function computeWarnings(scored, demographics, summary) {
   return warnings;
 }
 
-function ResultScreen({ demographics, answers, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
+function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
   const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
   const { scored, total, maxScore, percent, tier, warnings, groupSummaries, applicableCount, totalQuestions } = summary;
   const scoringNote = DATA.scoring?.note;
@@ -1088,6 +1178,7 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
         groupSummaries,
       },
       openResponses: collectOpenResponses(answers),
+      surveyFeedback: (surveyFeedback || '').trim(),
       warnings,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
