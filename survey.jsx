@@ -515,6 +515,9 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
   const demoCount = DATA.demographics?.length || 0;
   const questionCount = DATA.questions?.length || 0;
   const groupCount = DATA.groups?.length || 0;
+  const disclaimer = DATA.survey?.disclaimer;
+  const scoringNote = DATA.scoring?.note;
+  const weightGuidance = DATA.scoring?.weight_guidance || [];
   return (
     <div className="max-w-2xl mx-auto px-5 sm:px-8 pt-12 sm:pt-20 pb-32">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-6">
@@ -538,6 +541,34 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
         <Stat label="Câu hỏi" value={`${demoCount} + ${questionCount}`} />
         <Stat label="Lưu trữ" value="Ẩn danh" />
       </dl>
+
+      {(disclaimer || scoringNote) && (
+        <section className="mt-8 border-l-2 border-line pl-4 py-1 max-w-xl">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
+            Lưu ý về kết quả
+          </div>
+          {disclaimer && (
+            <p className="text-[13px] leading-relaxed text-ink/75">
+              {disclaimer}
+            </p>
+          )}
+          {scoringNote && (
+            <p className="mt-3 text-[12px] leading-relaxed text-muted whitespace-pre-line">
+              {scoringNote}
+            </p>
+          )}
+          {weightGuidance.length > 0 && (
+            <div className="mt-3 grid gap-2">
+              {weightGuidance.map(item => (
+                <div key={item.weight} className="flex items-start gap-2 text-[12px] leading-relaxed text-ink/75">
+                  <span className="mt-0.5 font-mono text-[10px] px-1.5 py-0.5 border border-line rounded-sm text-muted whitespace-nowrap">w{item.weight}</span>
+                  <span><span className="font-medium text-ink/85">{item.label}:</span> {item.description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="mt-12 space-y-4">
         {onResume && (
@@ -1002,6 +1033,8 @@ function computeWarnings(scored, demographics, summary) {
 function ResultScreen({ demographics, answers, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
   const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
   const { scored, total, maxScore, percent, tier, warnings, groupSummaries, applicableCount, totalQuestions } = summary;
+  const scoringNote = DATA.scoring?.note;
+  const weightGuidance = DATA.scoring?.weight_guidance || [];
 
   const [focusedGroup, setFocusedGroup] = useState(null);
   const breakdownRef = useRef(null);
@@ -1092,6 +1125,28 @@ function ResultScreen({ demographics, answers, sessionId, onRestart, submitState
       <p className="mt-3 text-[12px] text-muted leading-relaxed">
         Điểm tối đa được tính trên {applicableCount}/{totalQuestions} câu áp dụng; câu N/A không bị phạt và không cộng vào mẫu điểm.
       </p>
+      {(scoringNote || weightGuidance.length > 0) && (
+        <div className="mt-4 border-l-2 border-line pl-4 py-1 max-w-2xl">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
+            Cách tính điểm
+          </div>
+          {scoringNote && (
+            <p className="text-[12px] leading-relaxed text-muted whitespace-pre-line">
+              {scoringNote}
+            </p>
+          )}
+          {weightGuidance.length > 0 && (
+            <div className="mt-3 flex flex-col gap-1.5">
+              {weightGuidance.map(item => (
+                <div key={item.weight} className="text-[12px] leading-relaxed text-ink/75">
+                  <span className="font-mono text-[10px] px-1.5 py-0.5 border border-line rounded-sm text-muted mr-2">w{item.weight}</span>
+                  <span className="font-medium text-ink/85">{item.label}:</span> {item.description}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Radar */}
       <section className="mt-12">

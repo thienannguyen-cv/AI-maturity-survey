@@ -5,6 +5,8 @@
 survey:
   version: "1.1"
   title: "Khảo sát mức độ trưởng thành của việc tích hợp AI trong dự án phần mềm"
+  disclaimer: |-
+    Kết quả khảo sát chỉ có giá trị tham khảo và giúp định vị tương đối mức độ trưởng thành trong tích hợp AI vào dự án phần mềm. Đây không phải chứng nhận, audit độc lập, hay kết luận tuyệt đối về năng lực team. Các tiêu chí được tổng hợp từ thực hành hiện nay và hỗ trợ phân tích bằng AI, nên cần đọc cùng bối cảnh dự án và phản hồi mở của người tham gia.
 
 scoring:
   scale_max: 5
@@ -16,6 +18,16 @@ scoring:
   note: |-
     Điểm mỗi câu = score của option * weight của câu. N/A không cộng điểm và không tính vào điểm tối đa áp dụng.
     Weight 3 dùng cho năng lực nền tảng/rủi ro cao; weight 2 dùng cho năng lực vận hành quan trọng; weight 1 dùng cho năng lực nâng cao hoặc bổ trợ.
+  weight_guidance:
+    - weight: 3
+      label: "Nền tảng / rủi ro cao"
+      description: "Defect handling, HITL, evals, sandbox/security."
+    - weight: 2
+      label: "Vận hành quan trọng"
+      description: "Planning, context, harness, cost, model fit."
+    - weight: 1
+      label: "Nâng cao / bổ trợ"
+      description: "Skills, multi-agent orchestration, team enablement."
 
 open_response:
   enabled: true
