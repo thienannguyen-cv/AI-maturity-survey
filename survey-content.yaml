@@ -605,3 +605,394 @@ questions:
         score: 5
         text: |-
           Knowledge map/skill catalog được cập nhật từ commit, incident và review; onboarding AI workflow gần như có hệ thống.
+
+translations:
+  en:
+    survey:
+      title: "AI Integration Maturity Survey for Software Projects"
+      disclaimer: |-
+        Survey results are for reference and relative positioning of AI integration maturity in a software project. This is not a certification, independent audit, or absolute conclusion about team capability. The criteria are synthesized from current practice and AI-assisted analysis, so they should be read together with project context and open responses.
+    scoring:
+      not_applicable:
+        label: "Not applicable in this project"
+      note: |-
+        Each question score = selected option score * question weight. N/A adds no points and is excluded from the applicable maximum score.
+        Weight 3 is used for foundational or high-risk capabilities; weight 2 for important operational capabilities; weight 1 for advanced or supporting capabilities.
+      weight_guidance:
+        "3":
+          label: "Foundational / high-risk"
+          description: "Defect handling, HITL, evals, sandbox/security."
+        "2":
+          label: "Important operations"
+          description: "Planning, context, harness, cost, model fit."
+        "1":
+          label: "Advanced / supporting"
+          description: "Skills, multi-agent orchestration, team enablement."
+    open_response:
+      label: "Additional context (optional)"
+      placeholder: "For example: current artifacts, how the team works, why you chose this level, or what you are unsure about."
+    survey_feedback:
+      title: "Improvement feedback"
+      eyebrow: "Final section · not scored"
+      description: |-
+        If any part of the survey feels inaccurate, needs adjustment, or should include additional criteria or clearer wording, please write it here. This feedback helps improve the survey quality in future rounds.
+      placeholder: "For example: Which question was unclear? Is any criterion missing? Are the weights reasonable? Does any option fail to reflect your project reality?"
+    demographics:
+      a1:
+        label: "Which role is closest to your responsibility in this project?"
+        options:
+          - "Producer / Project Producer"
+          - "Product Owner / Product Manager"
+          - "Engineering Manager / Delivery Manager"
+          - "Tech Lead also coordinating delivery"
+          - "Other role with project delivery responsibility"
+      a2:
+        label: "What is the size of the project team, including regular AI-tool users?"
+        options:
+          - "1-3 people"
+          - "4-10 people"
+          - "11-30 people"
+          - ">30 people"
+      a3:
+        label: "How long has the project integrated AI into the delivery workflow?"
+        options:
+          - "<3 months"
+          - "3-12 months"
+          - "1-2 years"
+          - ">2 years"
+      a4:
+        label: "Which project risk profile is closest?"
+        options:
+          - "Internal tool or prototype, low risk"
+          - "Customer-facing product, medium risk"
+          - "System involving sensitive data, finance, security, or legal risk"
+          - "Core platform/service depended on by multiple teams"
+          - "Not sure"
+    groups:
+      planning:
+        name: "Delivery Planning & Scope"
+        short: "Planning"
+        description: "How producers and teams make AI a plannable variable instead of assuming a generic speed boost."
+      context:
+        name: "Context & Reusable Knowledge"
+        short: "Context"
+        description: "How the team provides context, maintains coherence, and packages knowledge so agents work reliably."
+      quality:
+        name: "Quality, HITL & Evals"
+        short: "Quality"
+        description: "How the team detects defects, assigns human decision rights, and verifies AI output repeatedly."
+      operations:
+        name: "Harness, Operations & Governance"
+        short: "Operations"
+        description: "How the team measures, isolates runtime, manages cost, and operates agents as a system."
+      capability:
+        name: "Agent Capability & Team Enablement"
+        short: "Capability"
+        description: "How the team chooses models, coordinates agents, and spreads AI capability across the organization."
+    tiers:
+      Ad-hoc:
+        name: "Ad-hoc"
+        recommendation: |-
+          AI is mainly used as individual effort. Prioritize standardizing task handoff, PR review, minimum sandboxing, and a small test/eval set.
+      Repeatable:
+        name: "Repeatable"
+        recommendation: |-
+          Repeatable patterns exist but still depend heavily on individuals. Next, align on definition of ready/done, basic logging, and a HITL checklist.
+      Defined:
+        name: "Defined"
+        recommendation: |-
+          The process is reasonably clear. Next, add quantitative measurement at critical points: evals, defect escape, intervention rate, and cost.
+      Managed:
+        name: "Managed"
+        recommendation: |-
+          The team manages AI as part of the delivery system. Next, increase automation in feedback loops and use data to control risk.
+      Optimizing:
+        name: "Optimizing"
+        recommendation: |-
+          The team operates AI at a highly mature level. Focus on sustainability, organization-scale standardization, and continuous improvement based on evals and telemetry.
+    questions:
+      "1":
+        topic: "Phase 1 effort estimation"
+        short: "Estimation"
+        text: |-
+          When the project enters its first phase (discovery, POC, setup, initial architecture), how does your team estimate effort when AI participates in the coding workflow?
+        measure: "How well AI is integrated into sizing and agile planning."
+        note: |-
+          Maturity is not simply saying "AI makes it faster"; it is knowing what becomes faster and what creates extra review, context, or eval work.
+        options:
+          - |-
+            Estimates are almost the same as traditional projects; AI is not treated as a separate variable.
+          - |-
+            Effort is reduced for tasks that "seem AI-suitable", mostly based on senior/dev lead intuition.
+          - |-
+            A sizing template considers context, change scope, tests to run, and task reasoning level.
+          - |-
+            The team logs agent time, fixes/rework after review, and human review time, then uses the data to calibrate estimates.
+          - |-
+            A pipeline or dashboard forecasts effort/risk from ticket history, context completeness, and repo complexity.
+      "14":
+        topic: "AI-oriented scope slicing"
+        short: "Task slicing"
+        text: |-
+          When receiving a new feature/epic, how do the producer and team split work so AI agents can contribute effectively without increasing rework?
+        measure: "Ability to turn product scope into AI-suitable work slices."
+        note: |-
+          AI usually works better on tasks with clear boundaries, clear acceptance criteria, and clear verification.
+        options:
+          - |-
+            Tickets are split as before; each developer decides whether to ask AI.
+          - |-
+            Some tickets are labeled "AI-suitable", but selection criteria are still intuitive.
+          - |-
+            A checklist defines AI-suitable tasks: small scope, clear output, runnable test/review path.
+          - |-
+            The backlog is routed clearly: agent draft, human design, pair-with-agent, or human-only based on risk.
+          - |-
+            A system suggests task slicing and confidence based on the repo, rework history, test/check coverage around the area, and risk; the producer reviews before sprint planning.
+      "15":
+        topic: "Readiness before agent work"
+        short: "Readiness"
+        text: |-
+          Before a ticket is assigned to a developer using an agent, what minimum information must the ticket contain to reduce misunderstanding and rework during review/verification?
+        measure: "Maturity of definition of ready for AI-assisted delivery."
+        note: |-
+          A good prompt cannot replace an ambiguous ticket. Readiness is a delivery responsibility, not only a developer prompting skill.
+        options:
+          - |-
+            The agent receives a short prompt or verbal description; acceptance criteria and verification path are missing.
+          - |-
+            The ticket/doc link exists, but context depends on the developer remembering and adding it manually.
+          - |-
+            Standards include acceptance criteria, relevant modules, test command, and important constraints.
+          - |-
+            Each run starts from a task packet: goal, context, risks, reviewer/rollback owner, and verification command.
+          - |-
+            A ticket readiness score is checked automatically; the agent is blocked when critical information or test baseline is missing.
+      "2":
+        topic: "Starting an AI session"
+        short: "Session start"
+        text: |-
+          When a developer starts a coding session with an AI agent (Claude Code, Cursor, Copilot, ...), how is the session initialized?
+        measure: "Maturity of context engineering during priming."
+        note: |-
+          A shared context file is useful, but a file that is too long or always fully loaded can make the agent less focused.
+        options:
+          - |-
+            The developer opens chat and pastes code/docs as needed; everyone works differently.
+          - |-
+            A project-wide file exists (AGENTS.md/CLAUDE.md/.cursorrules), but the agent usually reads almost everything.
+          - |-
+            The session starts with minimum context; the agent retrieves additional docs/code as the task requires.
+          - |-
+            The harness encodes reset, handoff, and session history lookup outside the active context.
+          - |-
+            Context is managed as external state: cache, index, filter, and phase-based loading.
+      "8":
+        topic: "Context engineering in long sessions"
+        short: "Long context"
+        text: |-
+          In a long session (many hours or several consecutive tasks), how does the team manage agent context to prevent context decay?
+        measure: "Ability to maintain coherence beyond a single prompt or context window."
+        note: |-
+          Long-context models still need context discipline: what stays in the prompt, what is retrieved, and what is summarized or handed off.
+        options:
+          - |-
+            The team keeps pasting more content; when the agent gets confused, they open a new session and redo work.
+          - |-
+            The team relies on built-in compaction/summarization from the tool without its own convention.
+          - |-
+            Progressive disclosure is defined: resident context, load-on-demand context, and context to drop.
+          - |-
+            Structured handoff happens regularly; session logs are stored outside active context and can be queried.
+          - |-
+            State/session memory is virtualized; the agent slices and filters logs/context by index instead of keeping everything in the prompt.
+      "5":
+        topic: "Packaging reusable agent skills"
+        short: "Skills"
+        text: |-
+          Do developers proactively package skills, workflows, or project knowledge into reusable assets for agents?
+        measure: "How well tacit knowledge is codified into reusable agent capability."
+        note: |-
+          Having a "skill file" matters less than whether the skill triggers at the right time, has an owner, and improves after use.
+        options:
+          - |-
+            Conventions and guidance are scattered in people's heads or in one long prompt.
+          - |-
+            Shared docs/context files exist, but they are not separated into workflows/skills with clear triggers.
+          - |-
+            Some reusable skills/prompts/scripts exist for repeated workflows such as testing, review, or release notes.
+          - |-
+            Skills have owners, versions, examples, and deterministic scripts for precision-critical parts.
+          - |-
+            A team/organization skill catalog exists; good workflows are turned into skill PRs and measured after rollout.
+      "3":
+        topic: "Detecting and handling defects in the pipeline"
+        short: "Defect handling"
+        text: |-
+          When an agent completes a task but the output has issues (wrong logic, hidden regression, drift), how does the team detect and handle it?
+        measure: "How systematically the team detects silent failures and regression."
+        note: |-
+          Silent failure is dangerous because the tool may report success while product behavior is already wrong.
+        options:
+          - |-
+            Problems are found only when the build breaks, an exception appears, or QA/users report a bug.
+          - |-
+            Someone manually reruns a few test cases when they remember or when the task feels risky.
+          - |-
+            CI runs tests/baseline diffs automatically for AI-assisted PRs; defects are recorded for learning.
+          - |-
+            Canary/golden scenarios, schema/output checks, and clear triage exist for AI-created defects.
+          - |-
+            An independent evaluator and bounded retry loop exist; defect patterns automatically become new regression checks.
+      "4":
+        topic: "Human-in-the-loop and improvement vs. bug triage"
+        short: "HITL"
+        text: |-
+          How does the project apply HITL, and when an agent proposes a change, what mechanism separates a "new improvement" from a "bug to fix"?
+        measure: "Clarity of decision rights, review gates, and triage."
+        note: |-
+          HITL does not mean humans approve everything. Good HITL routes the right decision to the right person at the right risk level.
+        options:
+          - |-
+            There is no formal HITL; developers copy/fix/merge based on personal judgment.
+          - |-
+            Every action asks for human approval, but review is often click-through or ad-hoc in PRs.
+          - |-
+            Risk is classified: deploy/delete/security require approval; other changes go through PR review and tests.
+          - |-
+            Bugs, enhancements, tech debt, and agent failures have separate workflows/owners; acceptance criteria drive classification.
+          - |-
+            HITL is calibrated with audit trails, sampling, and quality metrics; humans focus on genuinely risky decisions.
+      "10":
+        topic: "Evaluation framework (evals)"
+        short: "Evals"
+        text: |-
+          Does the project have its own eval/regression mechanism for AI-agent output, and what happens when the model, prompt, or harness changes?
+        measure: "Maturity of eval-driven development for AI output."
+        note: |-
+          Good evals often combine deterministic checks (unit tests, schema validation) with rubric-based judgment (LLM-as-judge, human rating) for issues that are hard to express as traditional tests.
+        options:
+          - |-
+            Developers read diffs/logs or run local builds; no repeatable baseline exists.
+          - |-
+            A small golden set exists, but checking is manual and often skipped under pressure.
+          - |-
+            An eval suite runs automatically in a sandbox, with baselines for comparing prompt/model/harness changes.
+          - |-
+            Deterministic checks and LLM-as-judge are combined using a rubric calibrated against human assessment.
+          - |-
+            Production/runtime failures feed back into eval cases; every major change must pass an eval gate.
+      "6":
+        topic: "Agent harness awareness and measurement"
+        short: "Harness"
+        text: |-
+          Does the team understand Agent Harnesses (tool routing, memory, sandbox, observability, policy), and has it measured what the project needs before adopting them?
+        measure: "Maturity of scaffolding around agents."
+        note: |-
+          The team does not have to build a harness from scratch; what matters is knowing which layers are configured, measured, and controlled.
+        options:
+          - |-
+            AI is used as chat/single-shot; the team does not think about harnesses or scaffolding.
+          - |-
+            The team uses the built-in harness from tools like Claude Code/Cursor, but with little configuration or measurement.
+          - |-
+            Tool subsets, system prompt/project context, and task completed/failed logging are configured.
+          - |-
+            Success rate, intervention rate, latency, and cost are tracked; major changes are tested on an eval set.
+          - |-
+            The harness has versioning, eval gates, and observability for both dev sessions and important agent workflows.
+      "11":
+        topic: "Cost & token observability"
+        short: "Cost"
+        text: |-
+          To what extent does the team track and manage AI-agent token/cost usage?
+        measure: "Cost observability and ability to govern cost by workflow."
+        note: |-
+          Flat-rate licenses do not remove the need to measure cost: latency, quota, error loops, and model routing are still operational costs.
+        options:
+          - |-
+            Nothing is tracked; cost is only noticed in invoices or quota reports at the end of the period.
+          - |-
+            Cost is estimated with heuristics or aggregate dashboards, but not tied to tickets/PRs.
+          - |-
+            Real usage is logged by session/run: input, output, cached tokens, latency, and model.
+          - |-
+            Cost is tied to ticket/PR/feature/team so expensive or inefficient workflows can be identified.
+          - |-
+            Budget guardrails and model routing by cost/quality/latency exist; outliers are alerted or blocked automatically.
+      "9":
+        topic: "Permissions, sandboxing, and runtime security"
+        short: "Security"
+        text: |-
+          When an agent runs shell commands, edits files, installs dependencies, or calls tools, how isolated and controlled is the execution environment?
+        measure: "Defense-in-depth for sandboxing, permissions, and audit."
+        note: |-
+          The more power an agent has, the more it needs runtime isolation, tool allowlists, secret handling, and clear audit trails.
+        options:
+          - |-
+            The agent runs with almost the same access as a local developer/CI runner; secrets and filesystem safety depend on personal discipline.
+          - |-
+            A container or separate environment exists, but network/secret/mount policies are still broad.
+          - |-
+            Tool allowlists, secret masking, network policy, and filesystem scope are defined for agent sessions.
+          - |-
+            Important sessions run in ephemeral/isolated environments; every tool call and file edit has an audit trail.
+          - |-
+            Permissions are tied to repo/CI policy; escalation requires approval and the agent identity is traceable across tools.
+      "7":
+        topic: "Ensuring the model is fit for the task"
+        short: "Model fit"
+        text: |-
+          What does the team do to ensure the model being used is capable enough for most project tasks?
+        measure: "How well model capability is matched to task difficulty, risk, and cost."
+        note: |-
+          The "strongest" model is not always the best choice. A fit-for-purpose model achieves quality at reasonable cost, latency, and risk.
+        options:
+          - |-
+            The default tool model is used; decisions are based on hype, demos, or habit.
+          - |-
+            A model is chosen after a few internal trials, but rarely revisited when tasks or models change.
+          - |-
+            Internal tasks are used to compare candidate models before important model/prompt changes.
+          - |-
+            Models are selected by task type: coding, review, long-context, tool use, visual, or requirement analysis.
+          - |-
+            Capability routing and fallback/escalation exist when a lighter model fails to meet the quality threshold.
+      "12":
+        topic: "Multi-agent & subagent orchestration"
+        short: "Orchestration"
+        text: |-
+          When the project uses multiple agents/subagents or parallel AI workflows, how is coordination organized?
+        measure: "Control over coordination between agents and write access to the codebase."
+        note: |-
+          More agents does not always mean better outcomes. Ownership, write boundaries, and verification matter most.
+        options:
+          - |-
+            One agent does everything in one flow; planning, coding, and verification are easily mixed together.
+          - |-
+            Multiple agents write to the codebase in parallel, causing style/architecture drift and merge difficulty.
+          - |-
+            One primary writer exists; other agents support research/review/test or work in clearly separated scopes.
+          - |-
+            A generator-verifier loop exists: one agent creates changes and another agent/context checks independently.
+          - |-
+            A manager/harness routes tasks to specialized agents/models, with escalation guardrails and conflict control.
+      "13":
+        topic: "Team enablement and knowledge sharing"
+        short: "Enablement"
+        text: |-
+          When a developer finds an effective AI workflow, how is that knowledge shared and controlled across the team?
+        measure: "Ability to spread good practice and control cognitive debt."
+        note: |-
+          Higher throughput does not automatically mean shared understanding has improved. The team still needs a shared theory of the program.
+        options:
+          - |-
+            Each developer installs tools and learns individually; AI-generated code may be merged even when few people understand it.
+          - |-
+            Sharing happens through informal chat/wiki; content becomes stale quickly and effective workflows are hard to identify.
+          - |-
+            A rule requires humans to understand AI-generated PRs; effective workflows are documented in docs/checklists.
+          - |-
+            AI workflows are reviewed periodically; context/skills are updated and practices that increase rework are removed.
+          - |-
+            A knowledge map/skill catalog is updated from commits, incidents, and reviews; AI workflow onboarding is close to systematic.

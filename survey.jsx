@@ -99,8 +99,8 @@ function seededShuffle(arr, seed) {
 function tierFor(percent) {
   return DATA.tiers.find(t => percent >= t.min && percent <= t.max) || DATA.tiers[0];
 }
-function getGroup(groupId) {
-  return (DATA.groups || []).find(g => g.id === groupId) || null;
+function getGroup(groupId, lang = 'vi') {
+  return localizeGroup((DATA.groups || []).find(g => g.id === groupId) || null, lang);
 }
 function getQuestionWeight(question) {
   const raw = Number(question?.weight ?? DATA.scoring?.default_weight ?? 1);
@@ -120,6 +120,270 @@ function hasQuestionChoice(answer) {
 function formatScore(value) {
   const n = Number(value || 0);
   return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, '');
+}
+
+const UI_TEXT = {
+  vi: {
+    languageToggle: 'EN',
+    languageAria: 'Đổi ngôn ngữ',
+    lightMode: 'Chế độ sáng',
+    darkMode: 'Chế độ tối',
+    loading: 'đang tải…',
+    internalAnon: 'Đánh giá nội bộ · ẩn danh',
+    heroLine1: 'Mức độ tích hợp AI',
+    heroLine2: 'trong dự án phần mềm.',
+    welcomeCopy: 'Bài đánh giá gồm {questionCount} câu maturity giúp bạn định vị dự án trên thang trưởng thành 5 mức (CMMI điều chỉnh cho AI-assisted development). Bạn sẽ nhận được điểm tổng theo trọng số, profile radar {groupCount} nhóm tương tác được, và khuyến nghị cụ thể cho bước tiếp theo.',
+    time: 'Thời gian',
+    questions: 'Câu hỏi',
+    storage: 'Lưu trữ',
+    anonymous: 'Ẩn danh',
+    resultNoteTitle: 'Lưu ý về kết quả',
+    savedSession: 'Đã lưu phiên trước',
+    resumeAt: 'Bạn đang ở',
+    continue: 'Tiếp tục',
+    restartFromBeginning: 'Bắt đầu lại từ đầu',
+    startAssessment: 'Bắt đầu đánh giá',
+    privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt người tham gia. Không thu thập tên, email, hay thông tin định danh từ bạn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại. Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyLocalOnly: 'Phản hồi của bạn được lưu cục bộ trên trình duyệt và (khi nộp) ghi ẩn danh vào kho dữ liệu tổng hợp. Không thu thập email hay thông tin định danh. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi bạn quay lại.',
+    contextPart: 'Phần A · Bối cảnh',
+    unscored: 'không tính điểm',
+    startEvaluation: 'Bắt đầu phần đánh giá',
+    next: 'Tiếp theo',
+    back: 'Quay lại',
+    question: 'Câu',
+    commonInfo: 'Thông tin chung',
+    close: 'Đóng',
+    optionalContext: 'Bổ sung bối cảnh (tuỳ chọn)',
+    contextPlaceholder: 'Thêm bối cảnh nếu cần.',
+    finishAndSeeResults: 'Hoàn thành & xem kết quả',
+    goToFeedback: 'Tiếp đến góp ý',
+    feedbackOptional: 'Phần này không bắt buộc và không ảnh hưởng đến điểm maturity.',
+    results: 'Kết quả',
+    profile: 'Profile',
+    totalScore: 'Tổng điểm',
+    percent: 'Tỷ lệ',
+    maxScoreNote: 'Điểm tối đa được tính trên {applicableCount}/{totalQuestions} câu áp dụng; câu N/A không bị phạt và không cộng vào mẫu điểm.',
+    scoringTitle: 'Cách tính điểm',
+    radarEyebrow: 'Profile {count} nhóm · tương tác',
+    radarTitle: 'Bản đồ radar',
+    preview: 'Preview',
+    reviewSignals: 'Đáng xem lại',
+    signalsFound: '{count} tín hiệu phát hiện',
+    falseHighCopy: 'Hệ thống đối chiếu chéo các câu trả lời để tìm mẫu "false high" — những chỗ respondent tự đánh giá cao ở một chiều nhưng các chiều bổ trợ lại thấp, hoặc bối cảnh team/dự án chưa đủ để đạt mức đó.',
+    internalSignalCopy: 'Đây là tín hiệu nội bộ cho người phân tích — không phải kết luận. Dùng để đánh giá độ tin cậy của self-rating; nên đối chiếu với các phản hồi mở/phỏng vấn trước khi ra quyết định.',
+    detailEyebrow: '{count} câu · weighted scoring',
+    detailTitle: 'Chi tiết từng câu',
+    detailInstruction: 'Sắp xếp theo {groupCount} nhóm. Bấm tên nhóm trên radar để cuộn xuống nhóm tương ứng — nhóm được chọn sẽ được làm nổi bật ở đây.',
+    group: 'Nhóm',
+    points: 'điểm',
+    ask: 'Hỏi →',
+    selected: 'Đã chọn →',
+    context: 'Bối cảnh →',
+    note: 'Lưu ý →',
+    downloadJson: 'Tải kết quả về (.json)',
+    restart: 'Bắt đầu lại',
+    sentFooter: 'Kết quả đã được gửi về email người quản lý khảo sát (nếu mạng cho phép) và lưu cục bộ trên thiết bị của bạn.',
+    localFooter: 'Phản hồi đã được ghi ẩn danh vào bộ nhớ cục bộ của trình duyệt.',
+    sending: 'Đang gửi kết quả về email người quản lý khảo sát…',
+    sent: 'Đã gửi kết quả thành công.',
+    sendError: 'Không gửi được kết quả qua mạng — dữ liệu vẫn được lưu cục bộ và bạn có thể tải về dưới đây.',
+    retrySend: 'Thử gửi lại',
+    savedProgress: 'Đã lưu tiến độ',
+    feedbackResume: 'Phần góp ý cải thiện',
+    warnEstimateCostTitle: 'Ước lượng cao nhưng cost observability thấp',
+    warnEstimateCostDetail: 'Bạn tự đánh giá ước lượng đã trưởng thành (Câu 1) nhưng chưa track cost/token (Câu 11). Khả năng cao estimate đang dựa trực giác chứ không phải dữ liệu — đáng xem lại Câu 1.',
+    warnEstimateReadinessTitle: 'Estimate cao nhưng planning readiness thấp',
+    warnEstimateReadinessDetail: 'Ước lượng AI trưởng thành cần task slicing và definition of ready đủ rõ. Nếu Q14/Q15 thấp, estimate Phase 1 có thể vẫn đang dựa vào kỳ vọng hơn là điều kiện thực thi.',
+    warnTaskReadinessTitle: 'Task slicing tốt nhưng readiness chưa đủ',
+    warnTaskReadinessDetail: 'Backlog được chia cho AI khá tốt, nhưng trước khi agent chạy lại thiếu acceptance criteria/context/test command. Đây là nguồn rework phổ biến.',
+    warnDefectEvalTitle: 'Phát hiện lỗi tốt nhưng chưa có eval framework',
+    warnDefectEvalDetail: 'Bạn xếp Câu 3 cao nhưng Câu 10 thấp. Phát hiện silent failure không có eval baseline thường là anecdote — đáng xem lại Câu 3.',
+    warnHarnessSecurityTitle: 'Harness cao nhưng runtime security thấp',
+    warnHarnessSecurityDetail: 'Harness trưởng thành mà sandbox/permission còn yếu là rủi ro vận hành lớn. Nên xem lại quyền tool, secret và audit trail trước khi mở rộng agent.',
+    warnModelEvalTitle: 'Model selection cao nhưng eval thấp',
+    warnModelEvalDetail: 'Chọn model theo task mà chưa có eval baseline dễ trở thành cảm tính nâng cao. Nên có bộ task nội bộ trước khi tin vào routing/model policy.',
+    warnSkillContextTitle: 'Catalog skill enterprise cần thời gian tích lũy',
+    warnSkillContextDetail: 'Bạn xếp Câu 5 ở mức cao nhưng team nhỏ và dự án mới <3 tháng. L4–L5 thường đòi hỏi accumulation lâu hơn — đáng xem lại Câu 5.',
+    warnParallelSwarmTitle: 'Parallel swarm thường là anti-pattern',
+    warnParallelSwarmDetail: 'Câu 12 phương án bạn chọn (parallel swarm nhiều agent cùng ghi) thường tệ hơn single-agent về mặt chất lượng kiến trúc. Đây không phải bước tiến, mà là vùng cần nghiên cứu thêm.',
+    warnManyNaTitle: 'Nhiều câu chưa áp dụng',
+    warnManyNaDetail: 'Có {naCount} câu được đánh dấu N/A nên điểm tối đa áp dụng đã giảm. Kết quả vẫn hợp lệ, nhưng nên đọc như snapshot phạm vi hiện tại chứ không phải maturity toàn diện.',
+    selectedLevel: 'L{level} đã chọn →',
+    currentlyViewing: 'Đang xem',
+    applicableQuestions: '{applicableCount}/{questionCount} câu áp dụng',
+    backToOverview: 'Quay lại tổng quan',
+    radarHint: 'Bấm vào tên nhóm để xem chi tiết · {groupCount} nhóm · {dimensionCount} chiều đo',
+    radarExitDetail: 'thoát khỏi chế độ chi tiết',
+    radarBackOverview: 'quay lại tổng quan',
+    radarViewGroup: 'xem chi tiết nhóm',
+  },
+  en: {
+    languageToggle: 'VI',
+    languageAria: 'Switch language',
+    lightMode: 'Light mode',
+    darkMode: 'Dark mode',
+    loading: 'loading…',
+    internalAnon: 'Internal assessment · anonymous',
+    heroLine1: 'AI integration maturity',
+    heroLine2: 'in software projects.',
+    welcomeCopy: 'This assessment includes {questionCount} maturity questions to help position your project on a 5-level maturity scale (CMMI adapted for AI-assisted development). You will receive a weighted score, an interactive {groupCount}-group radar profile, and practical next-step guidance.',
+    time: 'Time',
+    questions: 'Questions',
+    storage: 'Storage',
+    anonymous: 'Anonymous',
+    resultNoteTitle: 'How to read the result',
+    savedSession: 'Saved session',
+    resumeAt: 'You are at',
+    continue: 'Continue',
+    restartFromBeginning: 'Start over',
+    startAssessment: 'Start assessment',
+    privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID. No name, email, or identifying information is collected. You can pause midway — progress will be restored when you return. Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyLocalOnly: 'Your response is stored locally in the browser and anonymously written to aggregate storage on submission. No email or identifying information is collected. You can pause midway — progress will be restored when you return.',
+    contextPart: 'Part A · Context',
+    unscored: 'not scored',
+    startEvaluation: 'Start assessment',
+    next: 'Next',
+    back: 'Back',
+    question: 'Question',
+    commonInfo: 'General context',
+    close: 'Close',
+    optionalContext: 'Additional context (optional)',
+    contextPlaceholder: 'Add context if useful.',
+    finishAndSeeResults: 'Finish & view results',
+    goToFeedback: 'Continue to feedback',
+    feedbackOptional: 'This section is optional and does not affect the maturity score.',
+    results: 'Results',
+    profile: 'Profile',
+    totalScore: 'Total score',
+    percent: 'Percent',
+    maxScoreNote: 'The maximum score is based on {applicableCount}/{totalQuestions} applicable questions; N/A is not penalized and is excluded from the score denominator.',
+    scoringTitle: 'Scoring method',
+    radarEyebrow: '{count}-group profile · interactive',
+    radarTitle: 'Radar map',
+    preview: 'Preview',
+    reviewSignals: 'Worth reviewing',
+    signalsFound: '{count} signals detected',
+    falseHighCopy: 'The system cross-checks answers for "false high" patterns — cases where a respondent rates one dimension high while supporting dimensions or project context do not appear mature enough.',
+    internalSignalCopy: 'These are internal signals for analysis, not conclusions. Use them to assess self-rating reliability and compare with open responses or interviews before making decisions.',
+    detailEyebrow: '{count} questions · weighted scoring',
+    detailTitle: 'Question details',
+    detailInstruction: 'Grouped into {groupCount} categories. Click a group name on the radar to scroll to the corresponding section — the selected group will be highlighted here.',
+    group: 'Group',
+    points: 'points',
+    ask: 'Question →',
+    selected: 'Selected →',
+    context: 'Context →',
+    note: 'Note →',
+    downloadJson: 'Download results (.json)',
+    restart: 'Start over',
+    sentFooter: 'Results have been sent to the survey manager email when network access allows, and stored locally on this device.',
+    localFooter: 'The response has been anonymously stored in this browser local storage.',
+    sending: 'Sending results to the survey manager email…',
+    sent: 'Results sent successfully.',
+    sendError: 'Could not send results over the network — the data is still stored locally and can be downloaded below.',
+    retrySend: 'Retry sending',
+    savedProgress: 'Progress saved',
+    feedbackResume: 'Improvement feedback',
+    warnEstimateCostTitle: 'High estimating maturity but low cost observability',
+    warnEstimateCostDetail: 'You rated AI estimation as mature (Question 1), but cost/token tracking is still low (Question 11). The estimate may rely more on intuition than data — review Question 1.',
+    warnEstimateReadinessTitle: 'High estimates but low planning readiness',
+    warnEstimateReadinessDetail: 'Mature AI estimation needs clear task slicing and definition of ready. If Q14/Q15 are low, Phase 1 estimates may still reflect expectations more than execution conditions.',
+    warnTaskReadinessTitle: 'Good task slicing but weak readiness',
+    warnTaskReadinessDetail: 'The backlog appears well sliced for AI, but the agent may still start without acceptance criteria, context, or test commands. This is a common source of rework.',
+    warnDefectEvalTitle: 'Strong defect handling but no eval framework',
+    warnDefectEvalDetail: 'Question 3 is rated high while Question 10 is low. Detecting silent failures without an eval baseline is often anecdotal — review Question 3.',
+    warnHarnessSecurityTitle: 'Advanced harness but weak runtime security',
+    warnHarnessSecurityDetail: 'A mature harness with weak sandboxing/permissions creates major operational risk. Review tool permissions, secrets, and audit trails before scaling agent usage.',
+    warnModelEvalTitle: 'High model selection maturity but low eval maturity',
+    warnModelEvalDetail: 'Choosing models by task without an eval baseline can become sophisticated guesswork. Build an internal task set before trusting routing or model policy.',
+    warnSkillContextTitle: 'Enterprise skill catalogs need time to accumulate',
+    warnSkillContextDetail: 'Question 5 is rated high, but the team is small and the project is newer than 3 months. L4-L5 usually requires longer accumulation — review Question 5.',
+    warnParallelSwarmTitle: 'Parallel swarm is often an anti-pattern',
+    warnParallelSwarmDetail: 'The selected Question 12 option (many agents writing in parallel) is often worse than single-agent work for architectural quality. Treat it as an area to study, not a maturity step.',
+    warnManyNaTitle: 'Many questions marked not applicable',
+    warnManyNaDetail: '{naCount} questions were marked N/A, so the applicable maximum score is lower. The result is still valid, but read it as a snapshot of the current scope rather than comprehensive maturity.',
+    selectedLevel: 'L{level} selected →',
+    currentlyViewing: 'Viewing',
+    applicableQuestions: '{applicableCount}/{questionCount} applicable questions',
+    backToOverview: 'Back to overview',
+    radarHint: 'Click a group name to view details · {groupCount} groups · {dimensionCount} dimensions',
+    radarExitDetail: 'exit detail mode',
+    radarBackOverview: 'return to overview',
+    radarViewGroup: 'view group details',
+  },
+};
+
+function ui(lang, key, params = {}) {
+  let text = UI_TEXT[lang]?.[key] || UI_TEXT.vi[key] || key;
+  Object.entries(params).forEach(([name, value]) => {
+    text = text.replaceAll(`{${name}}`, String(value));
+  });
+  return text;
+}
+function getPath(obj, path) {
+  return path.reduce((cur, key) => (cur && cur[key] != null ? cur[key] : undefined), obj);
+}
+function tx(lang, path, fallback) {
+  if (lang === 'vi') return fallback;
+  return getPath(DATA.translations?.[lang], path) ?? fallback;
+}
+function localizeSurvey(lang, key) {
+  return tx(lang, ['survey', key], DATA.survey?.[key]);
+}
+function localizeScoringNote(lang) {
+  return tx(lang, ['scoring', 'note'], DATA.scoring?.note);
+}
+function localizeNA(lang) {
+  return tx(lang, ['scoring', 'not_applicable', 'label'], DATA.scoring?.not_applicable?.label);
+}
+function localizeWeightGuidance(item, lang) {
+  const t = getPath(DATA.translations?.[lang], ['scoring', 'weight_guidance', String(item.weight)]) || {};
+  return { ...item, label: t.label || item.label, description: t.description || item.description };
+}
+function localizeOpenResponse(lang) {
+  const t = getPath(DATA.translations?.[lang], ['open_response']) || {};
+  return {
+    ...(DATA.open_response || {}),
+    label: t.label || DATA.open_response?.label,
+    placeholder: t.placeholder || DATA.open_response?.placeholder,
+  };
+}
+function localizeFeedback(lang) {
+  const t = getPath(DATA.translations?.[lang], ['survey_feedback']) || {};
+  return {
+    ...(DATA.survey_feedback || {}),
+    title: t.title || DATA.survey_feedback?.title,
+    eyebrow: t.eyebrow || DATA.survey_feedback?.eyebrow,
+    description: t.description || DATA.survey_feedback?.description,
+    placeholder: t.placeholder || DATA.survey_feedback?.placeholder,
+  };
+}
+function localizeDemographic(spec, lang) {
+  const t = getPath(DATA.translations?.[lang], ['demographics', spec.id]) || {};
+  return { ...spec, label: t.label || spec.label, displayOptions: t.options || spec.options };
+}
+function localizeGroup(group, lang) {
+  if (!group) return group;
+  const t = getPath(DATA.translations?.[lang], ['groups', group.id]) || {};
+  return { ...group, name: t.name || group.name, short: t.short || group.short, description: t.description || group.description };
+}
+function localizeTier(tier, lang) {
+  if (!tier) return tier;
+  const t = getPath(DATA.translations?.[lang], ['tiers', tier.name]) || {};
+  return { ...tier, name: t.name || tier.name, recommendation: t.recommendation || tier.recommendation };
+}
+function localizeQuestion(question, lang) {
+  if (!question) return question;
+  const t = getPath(DATA.translations?.[lang], ['questions', String(question.id)]) || {};
+  return {
+    ...question,
+    topic: t.topic || question.topic,
+    short: t.short || question.short,
+    text: t.text || question.text,
+    measure: t.measure || question.measure,
+    note: t.note || question.note,
+    options: question.options.map((opt, i) => ({ ...opt, text: t.options?.[i] || opt.text })),
+  };
 }
 
 /* ------------------------- icons (inline SVG, Lucide-equiv) -------- */
@@ -154,6 +418,7 @@ function Survey() {
   const [demographics, setDemographics] = useState({});
   const [answers, setAnswers] = useState({});     // {qId: {level, score, originalIndex, isNA, comment}}
   const [surveyFeedback, setSurveyFeedback] = useState('');
+  const [lang, setLang] = useState('vi');
   const [dark, setDark] = useState(false);
   const [showResume, setShowResume] = useState(false);
   const [resumeTargetStage, setResumeTargetStage] = useState(null);
@@ -168,6 +433,10 @@ function Survey() {
     (async () => {
       const saved = await storage.get(SESSION_KEY);
       const themeSaved = await storage.get('ai-maturity:theme');
+      const langSaved = await storage.get('ai-maturity:language');
+      if (langSaved === 'en' || langSaved === 'vi') {
+        setLang(langSaved);
+      }
       if (themeSaved === 'dark' || (!themeSaved && window.matchMedia?.('(prefers-color-scheme: dark)').matches)) {
         setDark(true);
       }
@@ -194,6 +463,12 @@ function Survey() {
     document.documentElement.classList.toggle('dark', dark);
     if (booted) storage.set('ai-maturity:theme', dark ? 'dark' : 'light');
   }, [dark, booted]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.title = localizeSurvey(lang, 'title') || 'AI Maturity Survey';
+    if (booted) storage.set('ai-maturity:language', lang);
+  }, [lang, booted]);
 
   // persist
   const persist = useCallback(async (overrides = {}) => {
@@ -285,20 +560,22 @@ function Survey() {
       // Flat top-level fields make the email digest easy to scan;
       // full payload goes as a stringified field too.
       const summary = submission.summary;
+      const noAnswer = submission.language === 'en' ? '(no answer)' : '(không trả lời)';
       const body = {
         participant_id: submission.sessionId,
+        language: submission.language || 'vi',
         submitted_at: submission.submittedAt,
         tier: summary.tier.name,
         total_score: formatScore(summary.total),
         max_score: formatScore(summary.maxScore),
         percent_score: summary.percent.toFixed(1),
         applicable_questions: `${summary.applicableCount}/${summary.totalQuestions}`,
-        role: submission.demographics?.a1 || '(không trả lời)',
-        team_size: submission.demographics?.a2 || '(không trả lời)',
-        project_age: submission.demographics?.a3 || '(không trả lời)',
-        ai_scope: submission.demographics?.a4 || '(không trả lời)',
-        domain_risk: submission.demographics?.a5 || '(không trả lời)',
-        delivery_baseline: submission.demographics?.a6 || '(không trả lời)',
+        role: submission.demographics?.a1 || noAnswer,
+        team_size: submission.demographics?.a2 || noAnswer,
+        project_age: submission.demographics?.a3 || noAnswer,
+        ai_scope: submission.demographics?.a4 || noAnswer,
+        domain_risk: submission.demographics?.a5 || noAnswer,
+        delivery_baseline: submission.demographics?.a6 || noAnswer,
         warnings_count: summary.warnings.length,
         warnings: summary.warnings.map(w => `${w.title} [${w.refs.map(r => 'Q' + r).join(', ')}]`).join(' · '),
         open_responses_count: submission.openResponses.length,
@@ -327,7 +604,7 @@ function Survey() {
   }, []);
 
   const submit = async () => {
-    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback);
+    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback, lang);
     // Local shared storage (works even when endpoint is disabled/down)
     const prev = (await storage.get(SHARED_KEY, true)) || [];
     const list = Array.isArray(prev) ? prev : [];
@@ -343,9 +620,9 @@ function Survey() {
   };
 
   const retrySubmit = useCallback(() => {
-    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback);
+    const submission = buildSubmission(sessionId, demographics, answers, surveyFeedback, lang);
     sendToEndpoint(submission);
-  }, [sessionId, demographics, answers, surveyFeedback, sendToEndpoint]);
+  }, [sessionId, demographics, answers, surveyFeedback, lang, sendToEndpoint]);
 
   const restart = async () => {
     await storage.remove(SESSION_KEY);
@@ -398,28 +675,29 @@ function Survey() {
   if (!booted) {
     return (
       <div className="min-h-screen flex items-center justify-center text-ink/40">
-        <div className="text-sm font-mono tracking-wide">đang tải…</div>
+        <div className="text-sm font-mono tracking-wide">{ui(lang, 'loading')}</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-paper text-ink antialiased">
-      <Header dark={dark} onToggleDark={() => setDark(d => !d)} />
+      <Header dark={dark} lang={lang} onToggleLang={() => setLang(l => l === 'vi' ? 'en' : 'vi')} onToggleDark={() => setDark(d => !d)} />
 
       <main className="flex-1 w-full">
         {stage === 'welcome' && (
           <WelcomeScreen
+            lang={lang}
             endpointEnabled={!!SUBMISSION_ENDPOINT}
             onStart={startFresh}
             onResume={showResume ? resume : null}
             resumePosition={
               stage === 'welcome' && showResume
                 ? (resumeTargetStage === 'feedback'
-                    ? 'Phần góp ý cải thiện'
+                    ? ui(lang, 'feedbackResume')
                     : qIndex > 0 || Object.keys(answers).length > 0
-                    ? `Câu ${qIndex + 1} / ${DATA.questions.length}`
-                    : `Phần bối cảnh ${demoIndex + 1}/${DATA.demographics.length}`)
+                    ? `${ui(lang, 'question')} ${qIndex + 1} / ${DATA.questions.length}`
+                    : `${ui(lang, 'contextPart')} ${demoIndex + 1}/${DATA.demographics.length}`)
                 : null
             }
           />
@@ -434,6 +712,7 @@ function Survey() {
           {stage === 'demo' && (
             <SlideTransition keyName={'demo-' + demoIndex} dir={slideDir}>
               <DemographicScreen
+                lang={lang}
                 step={demoIndex}
                 spec={DATA.demographics[demoIndex]}
                 value={demographics[DATA.demographics[demoIndex].id]}
@@ -447,6 +726,7 @@ function Survey() {
           {stage === 'question' && (
             <SlideTransition keyName={'q-' + qIndex} dir={slideDir}>
               <QuestionScreen
+                lang={lang}
                 sessionId={sessionId}
                 index={qIndex}
                 total={DATA.questions.length}
@@ -456,7 +736,7 @@ function Survey() {
                 onNext={goNext}
                 onBack={goBack}
                 isLast={qIndex === DATA.questions.length - 1}
-                nextLabel={qIndex === DATA.questions.length - 1 && feedbackEnabled ? 'Tiếp đến góp ý' : null}
+                nextLabel={qIndex === DATA.questions.length - 1 && feedbackEnabled ? ui(lang, 'goToFeedback') : null}
               />
             </SlideTransition>
           )}
@@ -464,6 +744,7 @@ function Survey() {
           {stage === 'feedback' && (
             <SlideTransition keyName="feedback" dir={slideDir}>
               <SurveyFeedbackScreen
+                lang={lang}
                 value={surveyFeedback}
                 onChange={setFeedbackAnswer}
                 onNext={goNext}
@@ -477,6 +758,7 @@ function Survey() {
               demographics={demographics}
               answers={answers}
               surveyFeedback={surveyFeedback}
+              lang={lang}
               sessionId={sessionId}
               onRestart={restart}
               submitState={submitState}
@@ -490,13 +772,13 @@ function Survey() {
         </div>
       </main>
 
-      <SavedToast visible={savedFlash} />
+      <SavedToast visible={savedFlash} lang={lang} />
     </div>
   );
 }
 
 /* ------------------------- header ----------------------------------- */
-function Header({ dark, onToggleDark }) {
+function Header({ dark, lang, onToggleLang, onToggleDark }) {
   return (
     <header className="w-full border-b border-line/60">
       <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
@@ -509,13 +791,22 @@ function Header({ dark, onToggleDark }) {
             <div className="text-[11px] text-muted font-mono mt-1 tracking-wider uppercase">v1.0 · cmmi 5-tier</div>
           </div>
         </div>
-        <button
-          onClick={onToggleDark}
-          aria-label={dark ? 'Chế độ sáng' : 'Chế độ tối'}
-          className="w-9 h-9 grid place-items-center rounded-sm border border-line text-muted hover:text-ink hover:border-ink/40 transition-colors"
-        >
-          {dark ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleLang}
+            aria-label={ui(lang, 'languageAria')}
+            className="h-9 px-3 grid place-items-center rounded-sm border border-line text-[11px] font-mono tracking-wider text-muted hover:text-ink hover:border-ink/40 transition-colors"
+          >
+            {ui(lang, 'languageToggle')}
+          </button>
+          <button
+            onClick={onToggleDark}
+            aria-label={dark ? ui(lang, 'lightMode') : ui(lang, 'darkMode')}
+            className="w-9 h-9 grid place-items-center rounded-sm border border-line text-muted hover:text-ink hover:border-ink/40 transition-colors"
+          >
+            {dark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -552,41 +843,38 @@ function SlideTransition({ keyName, dir, children }) {
 }
 
 /* ------------------------- welcome --------------------------------- */
-function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
+function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnabled }) {
   const demoCount = DATA.demographics?.length || 0;
   const questionCount = DATA.questions?.length || 0;
   const groupCount = DATA.groups?.length || 0;
-  const disclaimer = DATA.survey?.disclaimer;
-  const scoringNote = DATA.scoring?.note;
-  const weightGuidance = DATA.scoring?.weight_guidance || [];
+  const disclaimer = localizeSurvey(lang, 'disclaimer');
+  const scoringNote = localizeScoringNote(lang);
+  const weightGuidance = (DATA.scoring?.weight_guidance || []).map(item => localizeWeightGuidance(item, lang));
   return (
     <div className="max-w-2xl mx-auto px-5 sm:px-8 pt-12 sm:pt-20 pb-32">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-6">
-        Đánh giá nội bộ · ẩn danh
+        {ui(lang, 'internalAnon')}
       </div>
 
       <h1 className="font-display font-medium text-[34px] sm:text-[44px] leading-[1.05] tracking-tight text-balance">
-        Mức độ tích hợp AI<br/>
-        <span className="text-muted">trong dự án phần mềm.</span>
+        {ui(lang, 'heroLine1')}<br/>
+        <span className="text-muted">{ui(lang, 'heroLine2')}</span>
       </h1>
 
       <p className="mt-8 text-[15px] sm:text-base leading-relaxed text-ink/80 max-w-xl">
-        Bài đánh giá gồm <strong className="font-medium">{questionCount} câu maturity</strong> giúp bạn định vị
-        dự án trên thang trưởng thành 5 mức (CMMI điều chỉnh cho AI-assisted development).
-        Bạn sẽ nhận được điểm tổng theo trọng số, profile radar {groupCount} nhóm tương tác được, và khuyến nghị cụ thể cho bước
-        tiếp theo.
+        {ui(lang, 'welcomeCopy', { questionCount, groupCount })}
       </p>
 
       <dl className="mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-line/60 pt-8">
-        <Stat label="Thời gian" value="~15 phút" />
-        <Stat label="Câu hỏi" value={`${demoCount} + ${questionCount}`} />
-        <Stat label="Lưu trữ" value="Ẩn danh" />
+        <Stat label={ui(lang, 'time')} value="~15 min" />
+        <Stat label={ui(lang, 'questions')} value={`${demoCount} + ${questionCount}`} />
+        <Stat label={ui(lang, 'storage')} value={ui(lang, 'anonymous')} />
       </dl>
 
       {(disclaimer || scoringNote) && (
         <section className="mt-8 border-l-2 border-line pl-4 py-1 max-w-xl">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
-            Lưu ý về kết quả
+            {ui(lang, 'resultNoteTitle')}
           </div>
           {disclaimer && (
             <p className="text-[13px] leading-relaxed text-ink/75">
@@ -615,14 +903,14 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
         {onResume && (
           <div className="border border-accent/30 bg-accent-soft px-4 py-4 rounded-sm flex items-center justify-between gap-4">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wider text-accent mb-1">Đã lưu phiên trước</div>
-              <div className="text-sm">Bạn đang ở <strong className="font-medium">{resumePosition}</strong></div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-accent mb-1">{ui(lang, 'savedSession')}</div>
+              <div className="text-sm">{ui(lang, 'resumeAt')} <strong className="font-medium">{resumePosition}</strong></div>
             </div>
             <button
               onClick={onResume}
               className="shrink-0 px-4 py-2 bg-ink text-paper text-sm font-medium rounded-sm hover:bg-ink/90 transition-colors"
             >
-              Tiếp tục
+              {ui(lang, 'continue')}
             </button>
           </div>
         )}
@@ -632,7 +920,7 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
             onClick={onStart}
             className="group flex-1 inline-flex items-center justify-between px-5 py-4 bg-ink text-paper rounded-sm hover:bg-ink/90 transition-colors"
           >
-            <span className="font-medium">{onResume ? 'Bắt đầu lại từ đầu' : 'Bắt đầu đánh giá'}</span>
+            <span className="font-medium">{onResume ? ui(lang, 'restartFromBeginning') : ui(lang, 'startAssessment')}</span>
             <ChevronRight size={18} className="transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
@@ -641,16 +929,11 @@ function WelcomeScreen({ onStart, onResume, resumePosition, endpointEnabled }) {
       <p className="mt-10 text-[12px] leading-relaxed text-muted max-w-xl">
         {endpointEnabled ? (
           <>
-            Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người
-            quản lý khảo sát kèm một mã session tự sinh để phân biệt người tham gia.
-            Không thu thập tên, email, hay thông tin định danh từ bạn. Bạn có thể tạm dừng
-            giữa chừng — tiến độ sẽ được khôi phục khi quay lại. Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.
+            {ui(lang, 'privacyWithEndpoint')}
           </>
         ) : (
           <>
-            Phản hồi của bạn được lưu cục bộ trên trình duyệt và (khi nộp) ghi ẩn danh
-            vào kho dữ liệu tổng hợp. Không thu thập email hay thông tin định danh.
-            Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi bạn quay lại.
+            {ui(lang, 'privacyLocalOnly')}
           </>
         )}
       </p>
@@ -667,18 +950,19 @@ function Stat({ label, value }) {
 }
 
 /* ------------------------- demographic ----------------------------- */
-function DemographicScreen({ step, spec, value, onChange, onNext, onBack }) {
+function DemographicScreen({ lang, step, spec, value, onChange, onNext, onBack }) {
+  const displaySpec = localizeDemographic(spec, lang);
   return (
     <div className="pt-10 sm:pt-16">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-3">
-        Phần A · Bối cảnh · {step + 1}/{DATA.demographics.length} <span className="text-ink/30">·</span> không tính điểm
+        {ui(lang, 'contextPart')} · {step + 1}/{DATA.demographics.length} <span className="text-ink/30">·</span> {ui(lang, 'unscored')}
       </div>
       <h2 className="font-display font-medium text-[24px] sm:text-[28px] leading-[1.2] tracking-tight text-balance mb-8">
-        {spec.label}
+        {displaySpec.label}
       </h2>
 
       <fieldset className="space-y-2.5">
-        <legend className="sr-only">{spec.label}</legend>
+        <legend className="sr-only">{displaySpec.label}</legend>
         {spec.options.map((opt, i) => {
           const selected = value === opt;
           return (
@@ -686,7 +970,7 @@ function DemographicScreen({ step, spec, value, onChange, onNext, onBack }) {
               key={i}
               checked={selected}
               onSelect={() => onChange(opt)}
-              label={opt}
+              label={displaySpec.displayOptions?.[i] || opt}
               name={'demo-' + spec.id}
             />
           );
@@ -697,28 +981,32 @@ function DemographicScreen({ step, spec, value, onChange, onNext, onBack }) {
         onBack={onBack}
         onNext={onNext}
         canNext={!!value}
-        nextLabel={step === DATA.demographics.length - 1 ? 'Bắt đầu phần đánh giá' : 'Tiếp theo'}
+        backLabel={ui(lang, 'back')}
+        nextLabel={step === DATA.demographics.length - 1 ? ui(lang, 'startEvaluation') : ui(lang, 'next')}
       />
     </div>
   );
 }
 
 /* ------------------------- question -------------------------------- */
-function QuestionScreen({ sessionId, index, total, question, value, onChange, onNext, onBack, isLast, nextLabel }) {
+function QuestionScreen({ lang, sessionId, index, total, question, value, onChange, onNext, onBack, isLast, nextLabel }) {
   const [popover, setPopover] = useState(false);
-  const group = getGroup(question.group);
-  const openResponse = question.open_response || DATA.open_response || {};
+  const displayQuestion = localizeQuestion(question, lang);
+  const group = getGroup(question.group, lang);
+  const openResponse = question.open_response
+    ? { ...localizeOpenResponse(lang), ...question.open_response }
+    : localizeOpenResponse(lang);
 
   // Stable shuffle keyed by session + question id
   const shuffledOptions = useMemo(() => {
     const seed = hashStr(sessionId + ':q' + question.id);
-    return seededShuffle(question.options.map((o, i) => ({ ...o, originalIndex: i })), seed);
-  }, [sessionId, question.id]);
+    return seededShuffle(displayQuestion.options.map((o, i) => ({ ...o, originalIndex: i })), seed);
+  }, [sessionId, question.id, lang]);
 
   const NA = {
     level: null,
     score: 0,
-    text: DATA.scoring?.not_applicable?.label || 'Chưa áp dụng trong dự án',
+    text: localizeNA(lang) || 'N/A',
     isNA: true,
   };
   const updateAnswer = (patch) => onChange({ ...(value || {}), ...patch });
@@ -729,7 +1017,7 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-            Câu {index + 1} / {total} <span className="text-ink/30 mx-1">·</span> {question.short}
+            {ui(lang, 'question')} {index + 1} / {total} <span className="text-ink/30 mx-1">·</span> {displayQuestion.short}
           </div>
           {group && (
             <div className="mt-2 inline-flex items-center gap-2 border border-line rounded-sm px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted bg-line/20">
@@ -740,7 +1028,7 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
         </div>
         <button
           onClick={() => setPopover(p => !p)}
-          aria-label="Lưu ý phổ biến"
+          aria-label={ui(lang, 'commonInfo')}
           aria-expanded={popover}
           className={`relative w-8 h-8 grid place-items-center rounded-full transition-colors ${popover ? 'bg-ink text-paper' : 'text-muted hover:text-ink hover:bg-line/40'}`}
         >
@@ -749,25 +1037,25 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
       </div>
 
       <h2 className="font-display font-medium text-[22px] sm:text-[26px] leading-[1.25] tracking-tight text-balance">
-        {question.text}
+        {displayQuestion.text}
       </h2>
 
       {popover && (
-        <div role="region" aria-label="Lưu ý phổ biến" className="mt-5 border-l-2 border-ink pl-4 py-2 bg-line/30 rounded-r-sm">
+        <div role="region" aria-label={ui(lang, 'commonInfo')} className="mt-5 border-l-2 border-ink pl-4 py-2 bg-line/30 rounded-r-sm">
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
-            <span>Thông tin chung</span>
-            <button onClick={() => setPopover(false)} className="text-muted hover:text-ink" aria-label="Đóng">
+            <span>{ui(lang, 'commonInfo')}</span>
+            <button onClick={() => setPopover(false)} className="text-muted hover:text-ink" aria-label={ui(lang, 'close')}>
               <X size={12} />
             </button>
           </div>
-          <p className="text-[13px] leading-relaxed text-ink/85">{question.note}</p>
+          <p className="text-[13px] leading-relaxed text-ink/85">{displayQuestion.note}</p>
         </div>
       )}
 
       <fieldset className="mt-8 space-y-2.5">
-        <legend className="sr-only">{question.text}</legend>
+        <legend className="sr-only">{displayQuestion.text}</legend>
         {shuffledOptions.map((opt, displayIdx) => {
-          const selected = value && value.level === opt.level && value.originalIndex === opt.originalIndex && !value.isNA;
+          const selected = !!(value && value.level === opt.level && value.originalIndex === opt.originalIndex && !value.isNA);
           return (
             <RadioRow
               key={opt.originalIndex}
@@ -802,13 +1090,13 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
             htmlFor={'comment-' + question.id}
             className="block font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2"
           >
-            {openResponse.label || 'Bổ sung bối cảnh (tuỳ chọn)'}
+            {openResponse.label || ui(lang, 'optionalContext')}
           </label>
           <textarea
             id={'comment-' + question.id}
             value={value?.comment || ''}
             onChange={(e) => updateAnswer({ comment: e.target.value })}
-            placeholder={openResponse.placeholder || 'Thêm bối cảnh nếu cần.'}
+            placeholder={openResponse.placeholder || ui(lang, 'contextPlaceholder')}
             rows={3}
             className="w-full resize-y rounded-sm border border-line bg-paper px-4 py-3 text-[14px] leading-relaxed text-ink placeholder:text-muted/70 focus:border-ink/50 transition-colors"
           />
@@ -819,22 +1107,23 @@ function QuestionScreen({ sessionId, index, total, question, value, onChange, on
         onBack={onBack}
         onNext={onNext}
         canNext={hasChoice}
-        nextLabel={nextLabel || (isLast ? 'Hoàn thành & xem kết quả' : 'Tiếp theo')}
+        backLabel={ui(lang, 'back')}
+        nextLabel={nextLabel || (isLast ? ui(lang, 'finishAndSeeResults') : ui(lang, 'next'))}
       />
     </div>
   );
 }
 
 /* ------------------------- survey feedback -------------------------- */
-function SurveyFeedbackScreen({ value, onChange, onNext, onBack }) {
-  const spec = DATA.survey_feedback || {};
+function SurveyFeedbackScreen({ lang, value, onChange, onNext, onBack }) {
+  const spec = localizeFeedback(lang);
   return (
     <div className="pt-10 sm:pt-16">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-3">
-        {spec.eyebrow || 'Phần cuối · không tính điểm'}
+        {spec.eyebrow || ui(lang, 'feedbackResume')}
       </div>
       <h2 className="font-display font-medium text-[24px] sm:text-[28px] leading-[1.2] tracking-tight text-balance mb-4">
-        {spec.title || 'Góp ý cải thiện'}
+        {spec.title || ui(lang, 'feedbackResume')}
       </h2>
       {spec.description && (
         <p className="text-[15px] text-ink/80 leading-relaxed max-w-xl">
@@ -847,27 +1136,28 @@ function SurveyFeedbackScreen({ value, onChange, onNext, onBack }) {
           htmlFor="survey-feedback"
           className="block font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2"
         >
-          Góp ý cải thiện
+          {spec.title || ui(lang, 'feedbackResume')}
         </label>
         <textarea
           id="survey-feedback"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={spec.placeholder || 'Bạn có góp ý nào để cải thiện survey không?'}
+          placeholder={spec.placeholder || ui(lang, 'contextPlaceholder')}
           rows={7}
           className="w-full resize-y rounded-sm border border-line bg-paper px-4 py-3 text-[14px] leading-relaxed text-ink placeholder:text-muted/70 focus:border-ink/50 transition-colors"
         />
       </div>
 
       <p className="mt-3 text-[12px] leading-relaxed text-muted">
-        Phần này không bắt buộc và không ảnh hưởng đến điểm maturity.
+        {ui(lang, 'feedbackOptional')}
       </p>
 
       <NavRow
         onBack={onBack}
         onNext={onNext}
         canNext={true}
-        nextLabel="Hoàn thành & xem kết quả"
+        backLabel={ui(lang, 'back')}
+        nextLabel={ui(lang, 'finishAndSeeResults')}
       />
     </div>
   );
@@ -906,14 +1196,14 @@ function RadioRow({ checked, onSelect, label, name, muted }) {
 }
 
 /* ------------------------- nav row --------------------------------- */
-function NavRow({ onBack, onNext, canNext, nextLabel }) {
+function NavRow({ onBack, onNext, canNext, nextLabel, backLabel = 'Quay lại' }) {
   return (
     <div className="mt-10 flex items-center justify-between gap-3">
       <button
         onClick={onBack}
         className="inline-flex items-center gap-1.5 px-3 py-2.5 text-sm text-muted hover:text-ink transition-colors"
       >
-        <ChevronLeft size={16} /> Quay lại
+        <ChevronLeft size={16} /> {backLabel}
       </button>
       <button
         onClick={onNext}
@@ -931,7 +1221,7 @@ function NavRow({ onBack, onNext, canNext, nextLabel }) {
 }
 
 /* ------------------------- saved toast ----------------------------- */
-function SavedToast({ visible }) {
+function SavedToast({ visible, lang }) {
   return (
     <div
       role="status"
@@ -941,15 +1231,16 @@ function SavedToast({ visible }) {
     >
       <div className="flex items-center gap-2 px-3.5 py-2 bg-ink text-paper text-[12px] font-medium rounded-full shadow-md">
         <SaveIcon size={13} stroke={2} />
-        Đã lưu tiến độ
+        {ui(lang, 'savedProgress')}
       </div>
     </div>
   );
 }
 
 /* ============================ RESULTS ============================== */
-function computeSummary(answers, demographics) {
+function computeSummary(answers, demographics, lang = 'vi') {
   const scored = DATA.questions.map(q => {
+    const displayQuestion = localizeQuestion(q, lang);
     const a = answers[q.id];
     const weight = getQuestionWeight(q);
     const possibleMax = getMaxRawScore(q) * weight;
@@ -961,8 +1252,8 @@ function computeSummary(answers, demographics) {
     return {
       id: q.id,
       group: q.group,
-      topic: q.topic,
-      short: q.short,
+      topic: displayQuestion.topic,
+      short: displayQuestion.short,
       weight,
       level: answered && !isNA ? Number(a.level) : null,
       rawScore,
@@ -977,9 +1268,9 @@ function computeSummary(answers, demographics) {
   const total = scored.reduce((s, x) => s + x.points, 0);
   const maxScore = scored.reduce((s, x) => s + x.maxPoints, 0);
   const percent = maxScore > 0 ? (total / maxScore) * 100 : 0;
-  const tier = tierFor(percent);
-  const groupSummaries = computeGroupSummaries(scored);
-  const warnings = computeWarnings(scored, demographics, { total, maxScore, percent, groupSummaries });
+  const tier = localizeTier(tierFor(percent), lang);
+  const groupSummaries = computeGroupSummaries(scored, lang);
+  const warnings = computeWarnings(scored, demographics, { total, maxScore, percent, groupSummaries }, lang);
   const applicableCount = scored.filter(s => s.answered && !s.isNA).length;
   return {
     scored,
@@ -994,15 +1285,16 @@ function computeSummary(answers, demographics) {
   };
 }
 
-function computeGroupSummaries(scored) {
+function computeGroupSummaries(scored, lang = 'vi') {
   const groups = DATA.groups || [];
   return groups.map(group => {
+    const displayGroup = localizeGroup(group, lang);
     const items = scored.filter(s => s.group === group.id);
     const total = items.reduce((sum, item) => sum + item.points, 0);
     const maxScore = items.reduce((sum, item) => sum + item.maxPoints, 0);
     const percent = maxScore > 0 ? (total / maxScore) * 100 : 0;
     return {
-      ...group,
+      ...displayGroup,
       questionCount: items.length,
       applicableCount: items.filter(item => item.answered && !item.isNA).length,
       total,
@@ -1013,30 +1305,34 @@ function computeGroupSummaries(scored) {
   });
 }
 
-function collectOpenResponses(answers) {
+function collectOpenResponses(answers, lang = 'vi') {
   return DATA.questions
-    .map(q => ({
-      questionId: q.id,
-      group: q.group,
-      topic: q.topic,
-      comment: (answers[q.id]?.comment || '').trim(),
-    }))
+    .map(q => {
+      const displayQuestion = localizeQuestion(q, lang);
+      return {
+        questionId: q.id,
+        group: q.group,
+        topic: displayQuestion.topic,
+        comment: (answers[q.id]?.comment || '').trim(),
+      };
+    })
     .filter(r => r.comment);
 }
 
-function buildSubmission(sessionId, demographics, answers, surveyFeedback = '') {
+function buildSubmission(sessionId, demographics, answers, surveyFeedback = '', lang = 'vi') {
   return {
     sessionId,
+    language: lang,
     submittedAt: new Date().toISOString(),
     demographics,
     answers, // anonymized — no PII collected
-    openResponses: collectOpenResponses(answers),
+    openResponses: collectOpenResponses(answers, lang),
     surveyFeedback: (surveyFeedback || '').trim(),
-    summary: computeSummary(answers, demographics),
+    summary: computeSummary(answers, demographics, lang),
   };
 }
 
-function computeWarnings(scored, demographics, summary) {
+function computeWarnings(scored, demographics, summary, lang = 'vi') {
   const get = (id) => scored.find(s => s.id === id);
   const warnings = [];
   const q1 = get(1), q3 = get(3), q5 = get(5), q6 = get(6), q7 = get(7), q9 = get(9), q10 = get(10), q11 = get(11), q12 = get(12), q14 = get(14), q15 = get(15);
@@ -1044,48 +1340,48 @@ function computeWarnings(scored, demographics, summary) {
   if (q1?.level >= 4 && q11?.level != null && q11.level <= 2) {
     warnings.push({
       key: 'q1-q11',
-      title: 'Ước lượng cao nhưng cost observability thấp',
-      detail: 'Bạn tự đánh giá ước lượng đã trưởng thành (Câu 1) nhưng chưa track cost/token (Câu 11). Khả năng cao estimate đang dựa trực giác chứ không phải dữ liệu — đáng xem lại Câu 1.',
+      title: ui(lang, 'warnEstimateCostTitle'),
+      detail: ui(lang, 'warnEstimateCostDetail'),
       refs: [1, 11],
     });
   }
   if (q1?.level >= 4 && ((q14?.level != null && q14.level <= 2) || (q15?.level != null && q15.level <= 2))) {
     warnings.push({
       key: 'q1-q14-q15',
-      title: 'Estimate cao nhưng planning readiness thấp',
-      detail: 'Ước lượng AI trưởng thành cần task slicing và definition of ready đủ rõ. Nếu Q14/Q15 thấp, estimate Phase 1 có thể vẫn đang dựa vào kỳ vọng hơn là điều kiện thực thi.',
+      title: ui(lang, 'warnEstimateReadinessTitle'),
+      detail: ui(lang, 'warnEstimateReadinessDetail'),
       refs: [1, 14, 15],
     });
   }
   if (q14?.level >= 4 && q15?.level != null && q15.level <= 2) {
     warnings.push({
       key: 'q14-q15',
-      title: 'Task slicing tốt nhưng readiness chưa đủ',
-      detail: 'Backlog được chia cho AI khá tốt, nhưng trước khi agent chạy lại thiếu acceptance criteria/context/test command. Đây là nguồn rework phổ biến.',
+      title: ui(lang, 'warnTaskReadinessTitle'),
+      detail: ui(lang, 'warnTaskReadinessDetail'),
       refs: [14, 15],
     });
   }
   if (q3?.level >= 4 && q10?.level != null && q10.level <= 2) {
     warnings.push({
       key: 'q3-q10',
-      title: 'Phát hiện lỗi tốt nhưng chưa có eval framework',
-      detail: 'Bạn xếp Câu 3 cao nhưng Câu 10 thấp. Phát hiện silent failure không có eval baseline thường là anecdote — đáng xem lại Câu 3.',
+      title: ui(lang, 'warnDefectEvalTitle'),
+      detail: ui(lang, 'warnDefectEvalDetail'),
       refs: [3, 10],
     });
   }
   if (q6?.level >= 4 && q9?.level != null && q9.level <= 2) {
     warnings.push({
       key: 'q6-q9',
-      title: 'Harness cao nhưng runtime security thấp',
-      detail: 'Harness trưởng thành mà sandbox/permission còn yếu là rủi ro vận hành lớn. Nên xem lại quyền tool, secret và audit trail trước khi mở rộng agent.',
+      title: ui(lang, 'warnHarnessSecurityTitle'),
+      detail: ui(lang, 'warnHarnessSecurityDetail'),
       refs: [6, 9],
     });
   }
   if (q7?.level >= 4 && q10?.level != null && q10.level <= 2) {
     warnings.push({
       key: 'q7-q10',
-      title: 'Model selection cao nhưng eval thấp',
-      detail: 'Chọn model theo task mà chưa có eval baseline dễ trở thành cảm tính nâng cao. Nên có bộ task nội bộ trước khi tin vào routing/model policy.',
+      title: ui(lang, 'warnModelEvalTitle'),
+      detail: ui(lang, 'warnModelEvalDetail'),
       refs: [7, 10],
     });
   }
@@ -1094,8 +1390,8 @@ function computeWarnings(scored, demographics, summary) {
   if (q5?.level >= 4 && teamSmall && newProject) {
     warnings.push({
       key: 'q5-context',
-      title: 'Catalog skill enterprise cần thời gian tích lũy',
-      detail: 'Bạn xếp Câu 5 ở mức cao nhưng team nhỏ và dự án mới <3 tháng. L4–L5 thường đòi hỏi accumulation lâu hơn — đáng xem lại Câu 5.',
+      title: ui(lang, 'warnSkillContextTitle'),
+      detail: ui(lang, 'warnSkillContextDetail'),
       refs: [5],
     });
   }
@@ -1103,8 +1399,8 @@ function computeWarnings(scored, demographics, summary) {
   if (q12?.level === 2) {
     warnings.push({
       key: 'q12-l2',
-      title: 'Parallel swarm thường là anti-pattern',
-      detail: 'Câu 12 phương án bạn chọn (parallel swarm nhiều agent cùng ghi) thường tệ hơn single-agent về mặt chất lượng kiến trúc. Đây không phải bước tiến, mà là vùng cần nghiên cứu thêm.',
+      title: ui(lang, 'warnParallelSwarmTitle'),
+      detail: ui(lang, 'warnParallelSwarmDetail'),
       refs: [12],
     });
   }
@@ -1112,19 +1408,19 @@ function computeWarnings(scored, demographics, summary) {
   if (naCount >= 4) {
     warnings.push({
       key: 'many-na',
-      title: 'Nhiều câu chưa áp dụng',
-      detail: `Có ${naCount} câu được đánh dấu N/A nên điểm tối đa áp dụng đã giảm. Kết quả vẫn hợp lệ, nhưng nên đọc như snapshot phạm vi hiện tại chứ không phải maturity toàn diện.`,
+      title: ui(lang, 'warnManyNaTitle'),
+      detail: ui(lang, 'warnManyNaDetail', { naCount }),
       refs: scored.filter(s => s.isNA).map(s => s.id),
     });
   }
   return warnings;
 }
 
-function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
-  const summary = useMemo(() => computeSummary(answers, demographics), [answers, demographics]);
+function ResultScreen({ demographics, answers, surveyFeedback, lang, sessionId, onRestart, submitState, submitError, onRetry, endpointEnabled, deploy, dark }) {
+  const summary = useMemo(() => computeSummary(answers, demographics, lang), [answers, demographics, lang]);
   const { scored, total, maxScore, percent, tier, warnings, groupSummaries, applicableCount, totalQuestions } = summary;
-  const scoringNote = DATA.scoring?.note;
-  const weightGuidance = DATA.scoring?.weight_guidance || [];
+  const scoringNote = localizeScoringNote(lang);
+  const weightGuidance = (DATA.scoring?.weight_guidance || []).map(item => localizeWeightGuidance(item, lang));
 
   const [focusedGroup, setFocusedGroup] = useState(null);
   const breakdownRef = useRef(null);
@@ -1139,23 +1435,25 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
   const handleDownload = () => {
     const payload = {
       meta: {
-        survey: 'AI Integration Maturity Survey v1.0',
+        survey: localizeSurvey(lang, 'title') || 'AI Integration Maturity Survey v1.0',
+        language: lang,
         sessionId,
         submittedAt: new Date().toISOString(),
       },
       demographics,
       responses: DATA.questions.map(q => {
+        const displayQuestion = localizeQuestion(q, lang);
         const a = answers[q.id];
         const selectedOption = Number.isInteger(a?.originalIndex) && a.originalIndex >= 0
-          ? q.options[a.originalIndex]
+          ? displayQuestion.options[a.originalIndex]
           : null;
         const scoredItem = scored.find(s => s.id === q.id);
-        const group = getGroup(q.group);
+        const group = getGroup(q.group, lang);
         return {
           questionId: q.id,
           groupId: q.group,
           groupName: group?.name || q.group,
-          topic: q.topic,
+          topic: displayQuestion.topic,
           selectedLevel: a?.isNA ? null : (a?.level ?? null),
           selectedOptionText: selectedOption?.text || null,
           notApplicable: a?.isNA === true,
@@ -1177,7 +1475,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
         tierRecommendation: tier.recommendation,
         groupSummaries,
       },
-      openResponses: collectOpenResponses(answers),
+      openResponses: collectOpenResponses(answers, lang),
       surveyFeedback: (surveyFeedback || '').trim(),
       warnings,
     };
@@ -1194,32 +1492,32 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
     <div className="pt-10 sm:pt-16">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-3 flex items-center gap-2">
         <Sparkle size={12} stroke={2} />
-        <span>Kết quả · {new Date().toLocaleDateString('vi-VN')}</span>
+        <span>{ui(lang, 'results')} · {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'vi-VN')}</span>
       </div>
 
       <h1 className="font-display font-medium text-[34px] sm:text-[44px] leading-[1.05] tracking-tight text-balance mb-2">
-        Profile: <span className="text-accent">{tier.name}</span>
+        {ui(lang, 'profile')}: <span className="text-accent">{tier.name}</span>
       </h1>
       <p className="text-[15px] text-ink/80 leading-relaxed max-w-xl">
         {tier.recommendation}
       </p>
 
       {endpointEnabled && (
-        <SubmissionBanner state={submitState} error={submitError} onRetry={onRetry} sessionId={sessionId} />
+        <SubmissionBanner lang={lang} state={submitState} error={submitError} onRetry={onRetry} sessionId={sessionId} />
       )}
 
       {/* Score block */}
       <div className="mt-10 grid grid-cols-2 gap-6 sm:gap-8 border-t border-b border-line/60 py-8">
-        <ScoreStat label="Tổng điểm" value={formatScore(total)} suffix={`/ ${formatScore(maxScore)}`} />
-        <ScoreStat label="Tỷ lệ" value={percent.toFixed(0)} suffix="/ 100%" />
+        <ScoreStat label={ui(lang, 'totalScore')} value={formatScore(total)} suffix={`/ ${formatScore(maxScore)}`} />
+        <ScoreStat label={ui(lang, 'percent')} value={percent.toFixed(0)} suffix="/ 100%" />
       </div>
       <p className="mt-3 text-[12px] text-muted leading-relaxed">
-        Điểm tối đa được tính trên {applicableCount}/{totalQuestions} câu áp dụng; câu N/A không bị phạt và không cộng vào mẫu điểm.
+        {ui(lang, 'maxScoreNote', { applicableCount, totalQuestions })}
       </p>
       {(scoringNote || weightGuidance.length > 0) && (
         <div className="mt-4 border-l-2 border-line pl-4 py-1 max-w-2xl">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
-            Cách tính điểm
+            {ui(lang, 'scoringTitle')}
           </div>
           {scoringNote && (
             <p className="text-[12px] leading-relaxed text-muted whitespace-pre-line">
@@ -1241,7 +1539,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
 
       {/* Radar */}
       <section className="mt-12">
-        <SectionTitle eyebrow={`Profile ${groupSummaries.length} nhóm · tương tác`} title="Bản đồ radar" />
+        <SectionTitle eyebrow={ui(lang, 'radarEyebrow', { count: groupSummaries.length })} title={ui(lang, 'radarTitle')} />
         <div className="mt-6 -mx-3 sm:-mx-6">
           <RadarBlock
             groupSummaries={groupSummaries}
@@ -1249,6 +1547,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
             focusedGroup={focusedGroup}
             onFocusChange={setFocusedGroup}
             dark={dark}
+            lang={lang}
           />
         </div>
       </section>
@@ -1259,11 +1558,11 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
         <section className="mt-14">
           <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-warn border border-warn/40 rounded-sm px-2 py-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
-            Preview
+            {ui(lang, 'preview')}
           </div>
-          <SectionTitle eyebrow={`${warnings.length} tín hiệu phát hiện`} title="Đáng xem lại" />
+          <SectionTitle eyebrow={ui(lang, 'signalsFound', { count: warnings.length })} title={ui(lang, 'reviewSignals')} />
           <p className="mt-4 text-[14px] text-ink/75 leading-relaxed max-w-2xl">
-            Hệ thống đối chiếu chéo các câu trả lời để tìm mẫu <em>"false high"</em> — những chỗ respondent tự đánh giá cao ở một chiều nhưng các chiều bổ trợ lại thấp, hoặc bối cảnh team/dự án chưa đủ để đạt mức đó.
+            {ui(lang, 'falseHighCopy')}
           </p>
           <ul className="mt-6 space-y-3">
             {warnings.map(w => (
@@ -1286,7 +1585,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
             ))}
           </ul>
           <p className="mt-4 text-[12px] text-muted leading-relaxed">
-            Đây là tín hiệu nội bộ cho người phân tích — không phải kết luận. Dùng để đánh giá độ tin cậy của self-rating; nên đối chiếu với các phản hồi mở/phỏng vấn trước khi ra quyết định.
+            {ui(lang, 'internalSignalCopy')}
           </p>
         </section>
       )}
@@ -1296,11 +1595,11 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
         <section className="mt-14" ref={breakdownRef}>
           <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-warn border border-warn/40 rounded-sm px-2 py-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-warn"></span>
-            Preview
+            {ui(lang, 'preview')}
           </div>
-          <SectionTitle eyebrow={`${DATA.questions.length} câu · weighted scoring`} title="Chi tiết từng câu" />
+          <SectionTitle eyebrow={ui(lang, 'detailEyebrow', { count: DATA.questions.length })} title={ui(lang, 'detailTitle')} />
           <p className="mt-3 text-[13px] text-muted leading-relaxed max-w-2xl">
-            Sắp xếp theo {groupSummaries.length} nhóm. Bấm tên nhóm trên radar để cuộn xuống nhóm tương ứng — nhóm được chọn sẽ được làm nổi bật ở đây.
+            {ui(lang, 'detailInstruction', { groupCount: groupSummaries.length })}
           </p>
 
           <div className="mt-8 space-y-10">
@@ -1318,22 +1617,23 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
                   <header className="border-b border-line pb-3 mb-4 flex items-baseline justify-between gap-3 flex-wrap">
                     <div>
                       <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-1">
-                        Nhóm · {items.length} câu
+                        {ui(lang, 'group')} · {items.length} {ui(lang, 'questions').toLowerCase()}
                       </div>
                       <h3 className="font-display font-medium text-[19px] sm:text-[22px] leading-tight tracking-tight">
                         {g.name}
                       </h3>
                     </div>
                     <div className="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">
-                      {g.percent.toFixed(0)}% · {formatScore(g.total)}/{formatScore(g.maxScore)} điểm
+                      {g.percent.toFixed(0)}% · {formatScore(g.total)}/{formatScore(g.maxScore)} {ui(lang, 'points')}
                     </div>
                   </header>
 
                   <ol className="space-y-3">
                     {items.map(({ s, q }) => {
+                      const displayQuestion = localizeQuestion(q, lang);
                       const a = answers[q.id];
                       const selectedOption = Number.isInteger(a?.originalIndex) && a.originalIndex >= 0
-                        ? q.options[a.originalIndex]
+                        ? displayQuestion.options[a.originalIndex]
                         : null;
                       return (
                         <li key={s.id} className="border border-line rounded-sm bg-paper">
@@ -1344,7 +1644,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
                             <div className="flex-1 min-w-0">
                               {/* Topic + score row */}
                               <div className="flex items-start justify-between gap-3 flex-wrap">
-                                <div className="font-display font-medium text-[15px] leading-snug">{q.topic}</div>
+                                <div className="font-display font-medium text-[15px] leading-snug">{displayQuestion.topic}</div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <LevelDots score={s.level || 0} />
                                   <div className="font-mono text-[11px] text-muted tabular-nums">
@@ -1357,35 +1657,35 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
 
                               {/* Question text */}
                               <p className="mt-3 text-[13px] leading-relaxed text-ink/75">
-                                <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Hỏi →</span>
-                                {q.text}
+                                <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">{ui(lang, 'ask')}</span>
+                                {displayQuestion.text}
                               </p>
 
                               {/* Selected option */}
                               {selectedOption ? (
                                 <p className="mt-2 text-[13px] leading-relaxed text-ink/90 border-l-2 border-accent pl-3 py-0.5 bg-accent-soft/40">
-                                  <span className="font-mono uppercase tracking-wider text-[10px] text-accent mr-1.5">L{selectedOption.level} đã chọn →</span>
+                                  <span className="font-mono uppercase tracking-wider text-[10px] text-accent mr-1.5">{ui(lang, 'selectedLevel', { level: selectedOption.level })}</span>
                                   {selectedOption.text}
                                 </p>
                               ) : s.isNA ? (
                                 <p className="mt-2 text-[13px] leading-relaxed text-muted border-l-2 border-line pl-3 py-0.5">
-                                  <span className="font-mono uppercase tracking-wider text-[10px] mr-1.5">Đã chọn →</span>
-                                  {DATA.scoring?.not_applicable?.label || 'Chưa áp dụng trong dự án'}
+                                  <span className="font-mono uppercase tracking-wider text-[10px] mr-1.5">{ui(lang, 'selected')}</span>
+                                  {localizeNA(lang) || 'N/A'}
                                 </p>
                               ) : null}
 
                               {/* Respondent's open response */}
                               {s.comment && (
                                 <p className="mt-2 text-[12.5px] leading-relaxed text-ink/75 border-l-2 border-line pl-3 py-0.5">
-                                  <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Bối cảnh →</span>
+                                  <span className="font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">{ui(lang, 'context')}</span>
                                   {s.comment}
                                 </p>
                               )}
 
                               {/* Author note */}
                               <p className="mt-2 text-[12.5px] leading-relaxed text-ink/65 italic">
-                                <span className="not-italic font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">Lưu ý →</span>
-                                {q.note}
+                                <span className="not-italic font-mono uppercase tracking-wider text-[10px] text-muted mr-1.5">{ui(lang, 'note')}</span>
+                                {displayQuestion.note}
                               </p>
                             </div>
                           </div>
@@ -1406,7 +1706,7 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
           onClick={handleDownload}
           className="flex-1 inline-flex items-center justify-between gap-2 px-5 py-4 bg-ink text-paper rounded-sm hover:bg-ink/90 transition-colors"
         >
-          <span className="font-medium text-sm">Tải kết quả về (.json)</span>
+          <span className="font-medium text-sm">{ui(lang, 'downloadJson')}</span>
           <Download size={16} />
         </button>
         <button
@@ -1414,21 +1714,21 @@ function ResultScreen({ demographics, answers, surveyFeedback, sessionId, onRest
           className="inline-flex items-center justify-center gap-2 px-5 py-4 border border-line text-ink rounded-sm hover:border-ink/40 hover:bg-line/30 transition-colors"
         >
           <RotateCcw size={16} />
-          <span className="font-medium text-sm">Bắt đầu lại</span>
+          <span className="font-medium text-sm">{ui(lang, 'restart')}</span>
         </button>
       </div>
 
       <p className="mt-8 text-[12px] text-muted leading-relaxed">
         {endpointEnabled
-          ? <>Kết quả đã được gửi về email người quản lý khảo sát (nếu mạng cho phép) và lưu cục bộ trên thiết bị của bạn.</>
-          : <>Phản hồi đã được ghi ẩn danh vào bộ nhớ cục bộ của trình duyệt.</>
+          ? <>{ui(lang, 'sentFooter')}</>
+          : <>{ui(lang, 'localFooter')}</>
         } Session ID: <span className="font-mono">{sessionId}</span>.
       </p>
     </div>
   );
 }
 
-function SubmissionBanner({ state, error, onRetry, sessionId }) {
+function SubmissionBanner({ lang, state, error, onRetry, sessionId }) {
   if (state === 'idle' || state === 'skipped') return null;
   const isSending = state === 'sending';
   const isSent = state === 'sent';
@@ -1450,17 +1750,17 @@ function SubmissionBanner({ state, error, onRetry, sessionId }) {
       </div>
       <div className="flex-1 min-w-0 text-[13px] leading-relaxed">
         {isSending && (
-          <span className="text-ink/80">Đang gửi kết quả về email người quản lý khảo sát…</span>
+          <span className="text-ink/80">{ui(lang, 'sending')}</span>
         )}
         {isSent && (
           <span className="text-ink/85">
-            Đã gửi kết quả thành công. <span className="font-mono text-[11px] text-muted">ID: {sessionId.slice(0, 16)}</span>
+            {ui(lang, 'sent')} <span className="font-mono text-[11px] text-muted">ID: {sessionId.slice(0, 16)}</span>
           </span>
         )}
         {isError && (
           <div>
             <div className="text-ink/85 mb-1.5">
-              Không gửi được kết quả qua mạng — dữ liệu vẫn được lưu cục bộ và bạn có thể tải về dưới đây.
+              {ui(lang, 'sendError')}
             </div>
             {error && (
               <div className="font-mono text-[10.5px] text-muted break-all mb-2">{error}</div>
@@ -1469,7 +1769,7 @@ function SubmissionBanner({ state, error, onRetry, sessionId }) {
               onClick={onRetry}
               className="inline-flex items-center gap-1.5 text-[12px] text-ink underline underline-offset-4 hover:no-underline"
             >
-              <RotateCcw size={12} /> Thử gửi lại
+              <RotateCcw size={12} /> {ui(lang, 'retrySend')}
             </button>
           </div>
         )}
@@ -1509,7 +1809,7 @@ function LevelDots({ score }) {
   );
 }
 
-function RadarBlock({ groupSummaries, scored, focusedGroup, onFocusChange, dark }) {
+function RadarBlock({ groupSummaries, scored, focusedGroup, onFocusChange, dark, lang }) {
   // Mobile responsive height
   const [height, setHeight] = useState(420);
   useEffect(() => {
@@ -1579,7 +1879,7 @@ function RadarBlock({ groupSummaries, scored, focusedGroup, onFocusChange, dark 
         style={{ cursor: 'pointer' }}
         role="button"
         tabIndex={0}
-        aria-label={`${row.fullLabel} — ${inDetailMode ? (focused ? 'thoát khỏi chế độ chi tiết' : 'quay lại tổng quan') : 'xem chi tiết nhóm'}`}
+        aria-label={`${row.fullLabel} — ${inDetailMode ? (focused ? ui(lang, 'radarExitDetail') : ui(lang, 'radarBackOverview')) : ui(lang, 'radarViewGroup')}`}
       >
         {/* Invisible hit area for easier tapping */}
         <rect
@@ -1638,23 +1938,23 @@ function RadarBlock({ groupSummaries, scored, focusedGroup, onFocusChange, dark 
           <>
             <div className="flex items-baseline gap-3 flex-wrap">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">Đang xem</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">{ui(lang, 'currentlyViewing')}</div>
                 <div className="font-display font-medium text-[16px] leading-tight">{focusedGroupData.name}</div>
               </div>
               <div className="font-mono text-[12px] text-muted tabular-nums">
-                {focusedGroupData.percent.toFixed(0)}% · {focusedGroupData.applicableCount}/{focusedGroupData.questionCount} câu áp dụng
+                {focusedGroupData.percent.toFixed(0)}% · {ui(lang, 'applicableQuestions', { applicableCount: focusedGroupData.applicableCount, questionCount: focusedGroupData.questionCount })}
               </div>
             </div>
             <button
               onClick={() => onFocusChange(null)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider text-muted hover:text-ink border border-line hover:border-ink/40 rounded-sm transition-colors"
             >
-              <X size={11} /> Quay lại tổng quan
+              <X size={11} /> {ui(lang, 'backToOverview')}
             </button>
           </>
         ) : (
           <div className="font-mono text-[11px] text-muted">
-            Bấm vào tên nhóm để xem chi tiết · {groupSummaries.length} nhóm · {scored.length} chiều đo
+            {ui(lang, 'radarHint', { groupCount: groupSummaries.length, dimensionCount: scored.length })}
           </div>
         )}
       </div>
