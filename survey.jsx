@@ -330,6 +330,16 @@ function tx(lang, path, fallback) {
 function localizeSurvey(lang, key) {
   return tx(lang, ['survey', key], DATA.survey?.[key]);
 }
+function localizeMethodology(lang) {
+  const base = DATA.survey?.methodology || {};
+  const t = getPath(DATA.translations?.[lang], ['survey', 'methodology']) || {};
+  return {
+    ...base,
+    label: t.label || base.label,
+    title: t.title || base.title,
+    url: t.url || base.url,
+  };
+}
 function localizeScoringNote(lang) {
   return tx(lang, ['scoring', 'note'], DATA.scoring?.note);
 }
@@ -848,6 +858,7 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
   const questionCount = DATA.questions?.length || 0;
   const groupCount = DATA.groups?.length || 0;
   const disclaimer = localizeSurvey(lang, 'disclaimer');
+  const methodology = localizeMethodology(lang);
   const scoringNote = localizeScoringNote(lang);
   const weightGuidance = (DATA.scoring?.weight_guidance || []).map(item => localizeWeightGuidance(item, lang));
   return (
@@ -871,7 +882,7 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
         <Stat label={ui(lang, 'storage')} value={ui(lang, 'anonymous')} />
       </dl>
 
-      {(disclaimer || scoringNote) && (
+      {(disclaimer || methodology?.title || scoringNote) && (
         <section className="mt-8 border-l-2 border-line pl-4 py-1 max-w-xl">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
             {ui(lang, 'resultNoteTitle')}
@@ -879,6 +890,23 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
           {disclaimer && (
             <p className="text-[13px] leading-relaxed text-ink/75">
               {disclaimer}
+            </p>
+          )}
+          {methodology?.title && (
+            <p className="mt-3 text-[12px] leading-relaxed text-ink/75">
+              <span className="font-medium text-ink/85">{methodology.label}: </span>
+              {methodology.url ? (
+                <a
+                  href={methodology.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-4 decoration-line hover:text-accent transition-colors"
+                >
+                  {methodology.title}
+                </a>
+              ) : (
+                <span>{methodology.title}</span>
+              )}
             </p>
           )}
           {scoringNote && (

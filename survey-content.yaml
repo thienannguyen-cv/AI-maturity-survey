@@ -7,6 +7,10 @@ survey:
   title: "Khảo sát mức độ trưởng thành của việc tích hợp AI trong dự án phần mềm"
   disclaimer: |-
     Kết quả khảo sát chỉ có giá trị tham khảo và giúp định vị tương đối mức độ trưởng thành trong tích hợp AI vào dự án phần mềm. Đây không phải chứng nhận, audit độc lập, hay kết luận tuyệt đối về năng lực team. Các tiêu chí được tổng hợp từ thực hành hiện nay và hỗ trợ phân tích bằng AI, nên cần đọc cùng bối cảnh dự án và phản hồi mở của người tham gia.
+  methodology:
+    label: "Tài liệu phương pháp và cơ sở thiết kế survey"
+    title: "AI Maturity Research Strategy Revision"
+    url: "https://github.com/thienannguyen-cv/AI-maturity-survey/blob/main/AI%20Maturity%20Research%20Strategy%20Revision.docx"
 
 scoring:
   scale_max: 5
@@ -368,7 +372,7 @@ questions:
       - level: 2
         score: 2
         text: |-
-          Mọi action đều hỏi human approve, nhưng review thường là click-through hoặc ad-hoc trong PR.
+          Mọi action đều hỏi human approve, nhưng review thường mang tính hình thức hoặc tùy từng PR, chưa có checklist/risk gate rõ.
       - level: 3
         score: 3
         text: |-
@@ -612,6 +616,10 @@ translations:
       title: "AI Integration Maturity Survey for Software Projects"
       disclaimer: |-
         Survey results are for reference and relative positioning of AI integration maturity in a software project. This is not a certification, independent audit, or absolute conclusion about team capability. The criteria are synthesized from current practice and AI-assisted analysis, so they should be read together with project context and open responses.
+      methodology:
+        label: "Methodology and survey design basis"
+        title: "AI Maturity Research Strategy Revision"
+        url: "https://github.com/thienannguyen-cv/AI-maturity-survey/blob/main/AI%20Maturity%20Research%20Strategy%20Revision.docx"
     scoring:
       not_applicable:
         label: "Not applicable in this project"
