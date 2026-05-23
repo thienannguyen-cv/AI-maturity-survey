@@ -43,8 +43,8 @@ survey_feedback:
   title: "Góp ý & cải thiện"
   eyebrow: "Phần cuối · không tính điểm"
   description: |-
-    Nếu có điểm nào trong bài survey mà bạn cảm thấy chưa đúng, cần sự thay đổi, hoặc bạn muốn đề xuất thêm tiêu chí/cách diễn đạt, hãy ghi lại ở đây. Phản hồi này giúp cải thiện chất lượng survey cho các vòng sau.
-  placeholder: "Ví dụ: Câu nào khó hiểu? Có tiêu chí nào thiếu? Cách chia weight có hợp lý không? Có option nào chưa phản ánh đúng thực tế dự án của bạn?"
+    Nếu bạn muốn giúp dashboard cộng đồng phản ánh thực tế tốt hơn, bạn có thể tự nguyện chia sẻ thêm một vài bối cảnh khái quát về dự án của bạn, ý kiến của bạn về những điểm nào trong bài survey mà bạn cảm thấy chưa đúng, cần sự thay đổi, hoặc các đề xuất của bạn về tiêu chí/cách diễn đạt, bằng cách ghi lại ở đây.
+  placeholder: "Ví dụ: Câu nào khó hiểu? Có tiêu chí nào thiếu? Cách chia weight có hợp lý không? Có option nào chưa phản ánh đúng thực tế dự án của bạn? "
 
 demographics:
   - id: a1
@@ -643,7 +643,7 @@ translations:
       title: "Improvement feedback"
       eyebrow: "Final section · not scored"
       description: |-
-        If any part of the survey feels inaccurate, needs adjustment, or should include additional criteria or clearer wording, please write it here. This feedback helps improve the survey quality in future rounds.
+        If you would like to help the community dashboard better reflect real-world practice, you may voluntarily share a few high-level details about your project, your thoughts on any parts of the survey that feel inaccurate or need revision, or your suggestions for criteria/wording by writing them here.
       placeholder: "For example: Which question was unclear? Is any criterion missing? Are the weights reasonable? Does any option fail to reflect your project reality?"
     demographics:
       a1:
