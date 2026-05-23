@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Maturity Dashboard Architecture Plan (v1)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.5; color: #1f2937; }
+    h1, h2, h3 { color: #111827; }
+    code, pre { background: #f3f4f6; }
+    pre { padding: 12px; overflow: auto; border-radius: 8px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 12px 0; }
+    .ok { color: #065f46; font-weight: 700; }
+    .warn { color: #92400e; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f9fafb; }
+    .mirror { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:12px; }
+    .panel { border:1px dashed #9ca3af; border-radius:8px; padding:12px; min-height:150px; }
+  </style>
+</head>
+<body>
+  <h1>AI Maturity Community Dashboard — Architecture & Delivery Plan</h1>
+  <p>Tài liệu này chốt kiến trúc <b>100% free ở giai đoạn đầu</b>, tối ưu tốc độ triển khai và minh bạch để bạn iterate nhanh.</p>
+
+  <h2>1) Mục tiêu & phạm vi</h2>
+  <ul>
+    <li>MVP trong 5 ngày: ingest dữ liệu survey, tính metrics chuẩn, hiển thị dashboard cộng đồng.</li>
+    <li>Tách data layer khỏi UI layer để chuyển đổi Metabase ↔ Static SQL+JS dễ dàng.</li>
+    <li>AI thực hiện phần kỹ thuật, bạn đóng vai trò phê duyệt/tinh chỉnh.</li>
+  </ul>
+
+  <h2>2) Kiến trúc thành phần</h2>
+  <div class="card">
+    <ol>
+      <li><b>Survey Frontend</b> (đang chạy Vercel): gửi payload qua webhook.</li>
+      <li><b>Ingest Worker</b> (Cloudflare Workers free): validate + chuẩn hóa + dedupe.</li>
+      <li><b>Data Store</b> (Cloudflare D1 free): raw + normalized + semantic views.</li>
+      <li><b>Metrics Job</b> (cron): refresh views/materialized tables mỗi 15 phút.</li>
+      <li><b>Dashboard v1</b> (Metabase free): đọc trực tiếp từ semantic views.</li>
+      <li><b>Mirror Dashboard</b> (HTML mock tab): phản ánh UI/luồng để bạn review nhanh trước khi chỉnh dashboard thật.</li>
+    </ol>
+  </div>
+
+  <h2>3) Luồng dữ liệu</h2>
+  <pre>Survey Submit -> Webhook -> Ingest Worker -> raw_submissions
+                                   |-> normalized tables
+                                   |-> quality_checks
+normalized -> semantic views -> Metabase dashboard
+semantic + checks -> weekly insight summary</pre>
+
+  <h2>4) Data contract (đã duyệt)</h2>
+  <table>
+    <tr><th>Table</th><th>Mục đích</th><th>Trường chính</th></tr>
+    <tr><td>raw_submissions</td><td>lưu payload nguyên bản để truy vết</td><td>id, received_at, payload_json, hash_fingerprint, ingest_status</td></tr>
+    <tr><td>survey_responses</td><td>fact phản hồi đã chuẩn hóa</td><td>response_id, session_id, submitted_at, survey_version, is_complete</td></tr>
+    <tr><td>demographic_answers</td><td>cohort slicing</td><td>response_id, question_id, selected_option</td></tr>
+    <tr><td>question_answers</td><td>score calculation</td><td>response_id, question_id, selected_level, is_na, weight, weighted_score</td></tr>
+    <tr><td>open_feedback</td><td>insight định tính</td><td>response_id, open_context_text, survey_feedback_text, pii_redacted_text</td></tr>
+  </table>
+
+  <h2>5) Metric contract (đã duyệt)</h2>
+  <pre>maturity_percent = total_weighted_score / applicable_max * 100
+applicable_max = SUM(max_weighted_score WHERE is_na = false)
+cohort threshold = 20
+confidence tags = High / Medium / Low</pre>
+
+  <h2>6) Dashboard tabs (v1)</h2>
+  <ul>
+    <li>Overview: sample size, tier distribution, radar by capability group.</li>
+    <li>Cohort Explorer: so sánh role/team-size/time-with-AI/risk domain.</li>
+    <li>Question Diagnostics: low-score items, variance, N/A rate.</li>
+    <li>Trend & Stability: biến động theo tuần + composition shift.</li>
+    <li>Feedback Intelligence: topic cluster + anonymized excerpts.</li>
+    <li>Change Request Workspace: tab riêng để bạn ghi chú chỉnh sửa có cấu trúc.</li>
+  </ul>
+
+  <h2>7) “Mirror dashboard” mock (để review trực quan)</h2>
+  <div class="mirror">
+    <div class="panel"><b>Tab: Overview</b><br/>Mock cards: Responses, Median Maturity, NA Rate.</div>
+    <div class="panel"><b>Tab: Cohorts</b><br/>Mock bar chart + filters role/team size.</div>
+    <div class="panel"><b>Tab: Diagnostics</b><br/>Mock table câu hỏi điểm thấp, variance cao.</div>
+    <div class="panel"><b>Tab: Change Request</b><br/>Template: mục tiêu thay đổi / lý do / mong đợi sau đổi.</div>
+  </div>
+
+  <h2>8) Kế hoạch triển khai chi tiết</h2>
+  <ol>
+    <li>Ngày 1-2: ingest worker + schema + dedupe + audit log.</li>
+    <li>Ngày 3: metric SQL views + data quality checks.</li>
+    <li>Ngày 4: dashboard v1 + filters + cohort threshold 20.</li>
+    <li>Ngày 5: smoke tests + runbook deploy + handover.</li>
+  </ol>
+
+  <h2>9) Testing checklist (thực chất)</h2>
+  <ul>
+    <li>Integrity: missing fields, invalid question IDs, out-of-range levels.</li>
+    <li>Constraints: duplicate session burst, timestamp ordering, version compatibility.</li>
+    <li>Edge cases: all N/A responses, partial completion, single cohort dominance.</li>
+    <li>Metric correctness: recompute manually on fixture samples.</li>
+  </ul>
+
+  <h2>10) Tiêu chí nghiệm thu</h2>
+  <p class="ok">PASS khi dashboard cập nhật trong 15-30 phút, metric truy vết được về SQL/view, và bạn có thể gửi change request qua tab workspace để AI đồng bộ lại dashboard thực tế.</p>
+  <p class="warn">Lưu ý: trước khi có dữ liệu lớn, insight chỉ ở mức directional, không suy diễn nhân quả.</p>
+</body>
+</html>
