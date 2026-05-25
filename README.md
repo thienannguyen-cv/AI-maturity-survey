@@ -1,8 +1,29 @@
 # AI Maturity Survey
 
-A lightweight, content-driven web survey for assessing **AI integration maturity** in software delivery projects.
+A lightweight, content-driven web survey for assessing **AI integration maturity in software delivery projects**.
 
-The survey is designed for producers, product/delivery leaders, and software teams that want a structured way to discuss how mature their AI-assisted delivery practices are. It focuses on practical delivery signals rather than generic enthusiasm about AI tooling.
+This project is designed for producers, product/delivery leaders, tech leads, and software teams that want a structured way to discuss how mature their AI-assisted delivery practices are. It focuses on practical delivery signals—planning, context, review, evals, governance, cost awareness, and team enablement—rather than generic enthusiasm about AI tools.
+
+> **Status:** Static-first public survey tool. The survey app and the community dashboard are related but separate parts of the broader AI maturity research workflow.
+
+## Why This Exists
+
+AI coding assistants and agentic development tools are becoming common in software teams, but adoption alone does not mean maturity.
+
+A team can generate code faster and still struggle with unclear task boundaries, missing project context, weak human review, absent evals, untracked rework, cost opacity, unsafe agent permissions, or inconsistent model/tool selection.
+
+This survey helps teams make those risks discussable. It is intended to support follow-up review, team learning, and lightweight diagnostic work around **AI-assisted software delivery**.
+
+## Who This Is For
+
+This survey is useful for:
+
+- Software teams using Copilot, Codex, Cursor, Claude Code, or other AI coding / agentic development tools.
+- Producers, delivery leads, PMs, and tech leads who need a shared language for AI-assisted delivery quality.
+- Teams moving from individual AI tool usage to repeatable team-level workflow.
+- Teams concerned about rework, silent failures, weak review practices, unclear AI governance, or cost visibility.
+
+It is **not** intended to measure broad enterprise AI strategy, HR readiness, marketing AI adoption, or company-wide transformation maturity.
 
 ## What The Survey Measures
 
@@ -18,17 +39,76 @@ The current survey model includes:
 
 The 5 capability groups are:
 
-- Delivery Planning & Scope
-- Context & Reusable Knowledge
-- Quality, HITL & Evals
-- Harness, Operations & Governance
-- Agent Capability & Team Enablement
+1. **Delivery Planning & Scope**
+2. **Context & Reusable Knowledge**
+3. **Quality, HITL & Evals**
+4. **Harness, Operations & Governance**
+5. **Agent Capability & Team Enablement**
+
+## What Respondents Get
+
+After completing the survey, respondents receive:
+
+- A weighted maturity score.
+- A 5-group radar profile.
+- Maturity tier positioning.
+- Group-level strengths and weaknesses.
+- Worth-reviewing signals for potentially inconsistent self-assessments.
+- A downloadable JSON result export.
+
+The result is designed to support follow-up discussion. It should not replace human review, project-specific analysis, or an independent audit.
+
+## Community Dashboard
+
+This survey mentions a **community dashboard** in the welcome/privacy copy.
+
+The intended relationship is:
+
+1. Respondents complete the survey.
+2. Individual responses can be used to generate a personal result.
+3. Anonymous or sanitized aggregate statistics may be used to improve the survey and build a community-level view of AI-assisted delivery maturity patterns.
+4. Raw free-text responses should **not** be published verbatim.
+
+Configured dashboard link:
+
+```text
+https://ai-maturity-dashboard-implementatio.vercel.app/dashboard
+```
+
+If the public dashboard entry point is instead:
+
+```text
+https://ai-maturity-dashboard-implementatio.vercel.app/
+```
+
+then update `COMMUNITY_DASHBOARD_URL` in `survey.jsx` so the survey points to the correct route.
+
+The dashboard should be treated as a companion analytics surface, not as a required dependency for running the survey locally.
 
 ## Interpretation Limits
 
 The result is a **reference and positioning tool**, not a certification, independent audit, or absolute conclusion about team capability.
 
 The score should be read together with project context, open responses, and follow-up discussion. Warning signals are especially useful as prompts for review, but they are not final judgments by themselves.
+
+## Using This For A Team Diagnostic
+
+This project can be used as the first step in a lightweight AI-assisted delivery diagnostic:
+
+1. Team members complete the survey.
+2. Results are compared across roles or project contexts.
+3. Warning signals are reviewed in a follow-up discussion.
+4. The team identifies 3–5 concrete workflow improvements for the next 30 days.
+
+Example improvement areas include:
+
+- Task slicing and definition of ready.
+- Context packaging and reusable project knowledge.
+- PR review and human-in-the-loop rules.
+- Eval/test baselines for AI-generated changes.
+- Sandbox permissions, secrets handling, and audit trail.
+- Cost/token tracking and intervention-rate tracking.
+- Model/tool selection policy.
 
 ## Methodology
 
@@ -38,13 +118,23 @@ The survey content and scoring model are based on the companion research/design 
 
 The same methodology link is also shown inside the survey welcome screen.
 
+For broader public reuse, consider converting the `.docx` methodology document into a Markdown file such as:
+
+```text
+docs/methodology.md
+```
+
+That would make the research basis easier to review, diff, and cite.
+
 ## Privacy And Data Handling
 
 The survey does not ask for personal names, email addresses, company names, client names, or specific project names.
 
 Responses are stored locally in the browser while the respondent is in progress. On submission, the app can also send a JSON payload to a configured Formspree endpoint and store an anonymous aggregate copy through the storage adapter when available.
 
-Free-text fields are intended for high-level context only. Respondents should not enter credentials, customer data, internal secrets, identifiable project details, or anything they are not authorized to share. Raw free-text feedback should not be published verbatim; aggregate statistics are the intended public/community-dashboard use case.
+Free-text fields are intended for high-level context only. Respondents should not enter credentials, customer data, internal secrets, identifiable project details, or anything they are not authorized to share.
+
+Raw free-text feedback should not be published verbatim. Aggregate statistics are the intended public/community-dashboard use case.
 
 Downloaded files named like `ai-maturity-*.json` are result exports. Treat them as data artifacts, not source code; do not commit them unless they are intentionally sanitized samples.
 
@@ -61,6 +151,7 @@ Downloaded files named like `ai-maturity-*.json` are result exports. Treat them 
 - Optional Formspree email submission.
 - Downloadable JSON result export.
 - Creator-only review signals controlled by `DEPLOY`.
+- Community dashboard link in welcome/privacy copy.
 
 ## Project Structure
 
@@ -162,26 +253,36 @@ Before shipping survey changes:
 - Warning rules reference valid question IDs.
 - EN/VI text remains aligned.
 - The result payload still includes `language`, demographics, answers, open responses, survey feedback, summary, and warnings.
+- The community dashboard link opens the intended public route.
+- The privacy copy accurately describes the current submission/storage behavior.
 
 ## Practical Enhancement Roadmap
 
-1. **Split `survey.jsx` into modules**
+1. **Add live demo and screenshots**
+   - Add a live survey URL near the top of this README.
+   - Add one screenshot or GIF of the welcome screen and one of the result/radar screen.
+
+2. **Convert methodology to Markdown**
+   - Move or copy the methodology from `.docx` into `docs/methodology.md`.
+   - Keep the `.docx` only if it is still useful as an authoring artifact.
+
+3. **Split `survey.jsx` into modules**
    - Suggested modules: `scoring.js`, `warnings.js`, `i18n.js`, `storage.js`, `submission.js`, `components/*`.
    - This would improve maintainability, reviewability, and testability.
 
-2. **Introduce a build system**
+4. **Introduce a build system**
    - Vite or a similar small setup would remove browser-side Babel and allow pinned dependencies.
 
-3. **Add schema validation for YAML**
+5. **Add schema validation for YAML**
    - JSON Schema, Zod, or a lightweight custom validator would catch content mistakes before runtime.
 
-4. **Add automated tests**
+6. **Add automated tests**
    - Unit tests for scoring, tier mapping, N/A handling, warning rules, and localization fallback.
 
-5. **Improve privacy/compliance documentation**
+7. **Improve privacy/compliance documentation**
    - Add explicit retention policy, submission handling process, and community-dashboard aggregation rules.
 
-6. **Add analytics carefully**
+8. **Add analytics carefully**
    - Track aggregate completion/drop-off and warning frequency without collecting identifying information.
 
 ## Known Limitations
@@ -191,6 +292,7 @@ Before shipping survey changes:
 - Browser-side JSX transpilation is convenient but not ideal for production scale.
 - Warning heuristics are useful review prompts, not universal conclusions.
 - The app is intentionally static-first and does not yet include a dedicated backend or admin console.
+- The community dashboard is a companion surface and may require separate deployment, data pipeline, and privacy documentation.
 
 ## License
 
