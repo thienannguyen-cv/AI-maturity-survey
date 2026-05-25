@@ -44,6 +44,7 @@ const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
  * Đổi cờ này khi chuyển môi trường; không cần đổi gì khác.
  */
 const DEPLOY = false;
+const COMMUNITY_DASHBOARD_URL = 'https://ai-maturity-dashboard-implementatio.vercel.app/dashboard';
 
 /* ------------------------- storage wrapper -------------------------- */
 // window.storage in Claude artifacts; localStorage fallback for preview.
@@ -959,15 +960,28 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
       </div>
 
       <p className="mt-10 text-[12px] leading-relaxed text-muted max-w-xl">
-        {endpointEnabled ? (
-          <>
-            {ui(lang, 'privacyWithEndpoint')}
-          </>
-        ) : (
-          <>
-            {ui(lang, 'privacyLocalOnly')}
-          </>
-        )}
+        {(() => {
+          const raw = endpointEnabled ? ui(lang, 'privacyWithEndpoint') : ui(lang, 'privacyLocalOnly');
+          const marker = lang === 'vi' ? 'dashboard cộng đồng' : 'community dashboard';
+          const idx = raw.indexOf(marker);
+          if (idx === -1) return raw;
+          const before = raw.slice(0, idx);
+          const after = raw.slice(idx + marker.length);
+          return (
+            <>
+              {before}
+              <a
+                href={COMMUNITY_DASHBOARD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-ink/40 underline-offset-2 hover:text-ink"
+              >
+                {marker}
+              </a>
+              {after}
+            </>
+          );
+        })()}
       </p>
     </div>
   );
