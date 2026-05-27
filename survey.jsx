@@ -45,6 +45,7 @@ const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
  */
 const DEPLOY = false;
 const COMMUNITY_DASHBOARD_URL = 'https://ai-maturity-dashboard-implementatio.vercel.app/dashboard';
+const SOURCE_REPO_URL = 'https://github.com/thienannguyen-cv/AI-maturity-survey';
 
 /* ------------------------- storage wrapper -------------------------- */
 // window.storage in Claude artifacts; localStorage fallback for preview.
@@ -986,9 +987,22 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
         })()}
       </p>
       {endpointEnabled && (
-        <p className="mt-2 text-[11px] leading-relaxed text-muted/85 max-w-xl">
-          {ui(lang, 'sourcePublicNote')}
-        </p>
+        <div className="mt-3 max-w-xl border border-line/80 bg-accent-soft/55 rounded-sm px-3.5 py-2.5">
+          <p className="text-[11px] leading-relaxed text-muted/90">
+            {ui(lang, 'sourcePublicNoteAuto')}
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-ink/85">
+            <span className="font-medium">{ui(lang, 'sourcePublicNoteLabel')}:</span>{' '}
+            <a
+              href={SOURCE_REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-ink/40 underline-offset-2 hover:text-ink break-all"
+            >
+              {SOURCE_REPO_URL}
+            </a>
+          </p>
+        </div>
       )}
     </div>
   );
