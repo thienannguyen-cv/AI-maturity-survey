@@ -144,7 +144,8 @@ const UI_TEXT = {
     continue: 'Tiếp tục',
     restartFromBeginning: 'Bắt đầu lại từ đầu',
     startAssessment: 'Bắt đầu đánh giá',
-    privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt phiên trả lời. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại. Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt phiên trả lời. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
+    sourcePublicNote: 'Trang khảo sát được cập nhật tự động nhờ liên kết triển khai giữa Vercel và repository mã nguồn, được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.',
     privacyLocalOnly: 'Phản hồi của bạn được lưu cục bộ trên trình duyệt và (khi nộp) ghi ẩn danh vào kho dữ liệu tổng hợp. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
     contextPart: 'Phần A · Bối cảnh',
     unscored: 'không tính điểm',
@@ -240,7 +241,8 @@ const UI_TEXT = {
     continue: 'Continue',
     restartFromBeginning: 'Start over',
     startAssessment: 'Start assessment',
-    privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID to distinguish response sessions. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return. Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID to distinguish response sessions. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
+    sourcePublicNote: 'This survey page is updated automatically via deployment linkage between Vercel and the source repository, is public at: https://github.com/thienannguyen-cv/AI-maturity-survey.',
     privacyLocalOnly: 'Your responses are stored locally in this browser and, on submission, anonymously written to aggregate storage. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
     contextPart: 'Part A · Context',
     unscored: 'not scored',
@@ -983,6 +985,11 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
           );
         })()}
       </p>
+      {endpointEnabled && (
+        <p className="mt-2 text-[11px] leading-relaxed text-muted/85 max-w-xl">
+          {ui(lang, 'sourcePublicNote')}
+        </p>
+      )}
     </div>
   );
 }
