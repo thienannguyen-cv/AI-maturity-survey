@@ -145,8 +145,6 @@ const UI_TEXT = {
     restartFromBeginning: 'Bắt đầu lại từ đầu',
     startAssessment: 'Bắt đầu đánh giá',
     privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt phiên trả lời. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
-    sourceNoteLabel: 'Deployment transparency',
-    sourcePublicNote: 'Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey. This survey page is updated automatically via deployment linkage between Vercel and the source repository.',
     privacyLocalOnly: 'Phản hồi của bạn được lưu cục bộ trên trình duyệt và (khi nộp) ghi ẩn danh vào kho dữ liệu tổng hợp. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
     sourceNoteLabel: 'Minh bạch triển khai',
     sourcePublicNote: 'Mã nguồn công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey. Trang khảo sát được cập nhật tự động nhờ liên kết triển khai giữa Vercel và kho mã nguồn.',
@@ -245,8 +243,6 @@ const UI_TEXT = {
     restartFromBeginning: 'Start over',
     startAssessment: 'Start assessment',
     privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID to distinguish response sessions. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
-    sourceNoteLabel: 'Deployment transparency',
-    sourcePublicNote: 'Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey. This survey page is updated automatically via deployment linkage between Vercel and the source repository.',
     privacyLocalOnly: 'Your responses are stored locally in this browser and, on submission, anonymously written to aggregate storage. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
     sourceNoteLabel: 'Deployment transparency',
     sourcePublicNote: 'Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey. This survey page is updated automatically via deployment linkage between Vercel and the source repository.',
@@ -997,7 +993,7 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
           <p className="text-[11.5px] leading-relaxed text-muted/90">
             {(() => {
               const note = ui(lang, 'sourcePublicNote');
-              const repoUrl = 'https://github.com/thienannguyen-cv/AI-maturity-survey';
+              const repoUrl = '--https://github.com/thienannguyen-cv/AI-maturity-survey--';
               const idx = note.indexOf(repoUrl);
               if (idx === -1) return note;
               return (
