@@ -990,27 +990,8 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
       {endpointEnabled && (
         <div className="mt-3 max-w-xl border border-line/80 bg-paper/40 rounded-sm px-3 py-2">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted/80 mb-1">{ui(lang, 'sourceNoteLabel')}</div>
-          <p className="text-[11.5px] leading-relaxed text-muted/90">
-            {(() => {
-              const note = ui(lang, 'sourcePublicNote');
-              const repoUrl = '--https://github.com/thienannguyen-cv/AI-maturity-survey--';
-              const idx = note.indexOf(repoUrl);
-              if (idx === -1) return note;
-              return (
-                <>
-                  {note.slice(0, idx)}
-                  <a
-                    href={repoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-ink/40 underline-offset-2 hover:text-ink break-all"
-                  >
-                    {repoUrl}
-                  </a>
-                  {note.slice(idx + repoUrl.length)}
-                </>
-              );
-            })()}
+          <p className="text-[11.5px] leading-relaxed text-muted/90 break-words">
+            {ui(lang, 'sourcePublicNote')}
           </p>
         </div>
       )}
