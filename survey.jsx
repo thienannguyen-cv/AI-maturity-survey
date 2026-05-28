@@ -44,6 +44,7 @@ const SUBMISSION_ENDPOINT = FORMSPREE_FORM_ID
  * Đổi cờ này khi chuyển môi trường; không cần đổi gì khác.
  */
 const DEPLOY = false;
+const COMMUNITY_DASHBOARD_URL = 'https://ai-maturity-dashboard-implementatio.vercel.app/dashboard';
 
 /* ------------------------- storage wrapper -------------------------- */
 // window.storage in Claude artifacts; localStorage fallback for preview.
@@ -143,8 +144,10 @@ const UI_TEXT = {
     continue: 'Tiếp tục',
     restartFromBeginning: 'Bắt đầu lại từ đầu',
     startAssessment: 'Bắt đầu đánh giá',
-    privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt phiên trả lời. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại. Mã nguồn được công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyWithEndpoint: 'Phản hồi được lưu cục bộ trên trình duyệt và (khi nộp) gửi về email người quản lý khảo sát kèm một mã session tự sinh để phân biệt phiên trả lời. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
     privacyLocalOnly: 'Phản hồi của bạn được lưu cục bộ trên trình duyệt và (khi nộp) ghi ẩn danh vào kho dữ liệu tổng hợp. Bài khảo sát không yêu cầu tên, email, tên công ty, tên dự án hoặc thông tin định danh. Khi gửi khảo sát, phản hồi của bạn có thể được lưu trữ và phân tích để tạo kết quả cá nhân, cải thiện survey và xây dựng thống kê tổng hợp cho dashboard cộng đồng. Phản hồi thô và góp ý tự do sẽ không được công khai nguyên văn. Bạn có thể tạm dừng giữa chừng — tiến độ sẽ được khôi phục khi quay lại.',
+    sourceNoteLabel: 'Minh bạch triển khai',
+    sourcePublicNote: 'Mã nguồn công khai tại: https://github.com/thienannguyen-cv/AI-maturity-survey. Trang khảo sát được cập nhật tự động nhờ liên kết triển khai giữa Vercel và repository mã nguồn.',
     contextPart: 'Phần A · Bối cảnh',
     unscored: 'không tính điểm',
     startEvaluation: 'Bắt đầu phần đánh giá',
@@ -239,8 +242,10 @@ const UI_TEXT = {
     continue: 'Continue',
     restartFromBeginning: 'Start over',
     startAssessment: 'Start assessment',
-    privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID to distinguish response sessions. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return. Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey.',
+    privacyWithEndpoint: 'Responses are stored locally in this browser and, on submission, sent to the survey manager email with a generated session ID to distinguish response sessions. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
     privacyLocalOnly: 'Your responses are stored locally in this browser and, on submission, anonymously written to aggregate storage. The survey does not ask for your name, email address, company name, project name, or identifying information. When you submit the survey, your responses may be stored and analyzed to generate your individual result, improve the survey, and produce aggregate statistics for the community dashboard. Raw responses and free-text feedback will not be published verbatim. You can pause midway — progress will be restored when you return.',
+    sourceNoteLabel: 'Deployment transparency',
+    sourcePublicNote: 'Source code is public at: https://github.com/thienannguyen-cv/AI-maturity-survey. This survey page is updated automatically via deployment linkage between Vercel and the source repository.',
     contextPart: 'Part A · Context',
     unscored: 'not scored',
     startEvaluation: 'Start assessment',
@@ -959,16 +964,37 @@ function WelcomeScreen({ lang, onStart, onResume, resumePosition, endpointEnable
       </div>
 
       <p className="mt-10 text-[12px] leading-relaxed text-muted max-w-xl">
-        {endpointEnabled ? (
-          <>
-            {ui(lang, 'privacyWithEndpoint')}
-          </>
-        ) : (
-          <>
-            {ui(lang, 'privacyLocalOnly')}
-          </>
-        )}
+        {(() => {
+          const raw = endpointEnabled ? ui(lang, 'privacyWithEndpoint') : ui(lang, 'privacyLocalOnly');
+          const marker = lang === 'vi' ? 'dashboard cộng đồng' : 'community dashboard';
+          const idx = raw.indexOf(marker);
+          if (idx === -1) return raw;
+          const before = raw.slice(0, idx);
+          const after = raw.slice(idx + marker.length);
+          return (
+            <>
+              {before}
+              <a
+                href={COMMUNITY_DASHBOARD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-ink/40 underline-offset-2 hover:text-ink"
+              >
+                {marker}
+              </a>
+              {after}
+            </>
+          );
+        })()}
       </p>
+      {endpointEnabled && (
+        <div className="mt-3 max-w-xl border border-line/80 bg-paper/40 rounded-sm px-3 py-2">
+          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted/80 mb-1">{ui(lang, 'sourceNoteLabel')}</div>
+          <p className="text-[11.5px] leading-relaxed text-muted/90 break-words">
+            {ui(lang, 'sourcePublicNote')}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
