@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Maturity Dashboard Architecture (Mirror + Deploy Guide)</title>
+  <style>
+    body { font-family: Inter, Arial, sans-serif; margin: 24px; line-height: 1.45; color: #111; }
+    h1,h2,h3 { margin-top: 1.2em; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px; }
+    .card { border:1px solid #ddd; border-radius:10px; padding:12px; background:#fafafa; }
+    .ok { color:#0a7a2f; font-weight:600; }
+    code { background:#f1f1f1; padding:2px 6px; border-radius:6px; }
+    .tabs a { margin-right: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>AI Maturity Community Dashboard — Architecture & Mirror UI</h1>
+  <p>This document is the single-source guide for planning, implementation mapping, and self-deployment of the MVP.</p>
+
+  <div class="tabs">
+    <a href="#context">1) Context</a>
+    <a href="#components">2) Components</a>
+    <a href="#flow">3) Data Flow</a>
+    <a href="#mirror">4) Mirror Dashboard</a>
+    <a href="#deploy">5) Deploy Steps</a>
+    <a href="#checks">6) Tests & Data Checks</a>
+    <a href="#change">7) Change Protocol</a>
+  </div>
+
+  <h2 id="context">1) Context & Decisions</h2>
+  <ul>
+    <li>Gate A: <span class="ok">Approved</span>.</li>
+    <li>Gate B: <span class="ok">Approved</span>.</li>
+    <li>Cohort minimum threshold: <code>n &gt;= 20</code>.</li>
+    <li>Priority: fast, transparent, 100% free MVP with scale path.</li>
+  </ul>
+
+  <h2 id="components">2) Components (MVP v1)</h2>
+  <div class="grid">
+    <div class="card"><h3>Survey Source</h3><p>Existing survey app on Vercel.</p></div>
+    <div class="card"><h3>Ingest Endpoint</h3><p>Serverless webhook receiver, validation + fingerprint.</p></div>
+    <div class="card"><h3>Raw Store</h3><p><code>raw_submissions</code> keeps original payload for traceability.</p></div>
+    <div class="card"><h3>Normalized Store</h3><p><code>survey_responses</code>, <code>demographic_answers</code>, <code>question_answers</code>.</p></div>
+    <div class="card"><h3>Semantic SQL Views</h3><p>Tier, maturity%, N/A rate, cohort deltas.</p></div>
+    <div class="card"><h3>Dashboard</h3><p>Metabase free reads views only.</p></div>
+    <div class="card"><h3>Insight Job</h3><p>Weekly summary with confidence tags.</p></div>
+    <div class="card"><h3>Data Quality</h3><p>Integrity/constraints/edge-case checks + alert hooks.</p></div>
+  </div>
+
+  <h2 id="flow">3) Data Flow</h2>
+  <ol>
+    <li>User submits survey.</li>
+    <li>Webhook validates schema, stores raw payload.</li>
+    <li>Transformer writes normalized rows.</li>
+    <li>Metric job computes semantic views.</li>
+    <li>Dashboard queries only stable semantic views.</li>
+    <li>Weekly insight report filters cohorts with <code>n &gt;= 20</code>.</li>
+  </ol>
+
+  <h2 id="mirror">4) Mirror Dashboard (Mock Data, Real Structure)</h2>
+  <p>Use this section to give UI feedback before production data is rich enough.</p>
+  <table>
+    <thead><tr><th>Tab</th><th>Purpose</th><th>Mock Widgets</th></tr></thead>
+    <tbody>
+      <tr><td>Overview</td><td>Executive summary</td><td>Total responses, tier distribution, 5-group radar placeholder</td></tr>
+      <tr><td>Cohorts</td><td>Compare segments</td><td>Role/team-size filters, delta bars, confidence badges</td></tr>
+      <tr><td>Questions</td><td>Diagnostics</td><td>Lowest score list, highest variance list, N/A table</td></tr>
+      <tr><td>Trend</td><td>Stability over time</td><td>Weekly moving average, composition drift chart</td></tr>
+      <tr><td>Feedback</td><td>Qualitative insights</td><td>Topic clusters, redacted quotes, top recommendation cards</td></tr>
+      <tr><td>Change Request Space</td><td>Visual feedback workspace</td><td>Annotated screenshots + UI change notes mapped to SQL/view impacts</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="deploy">5) Free Deployment Steps</h2>
+  <ol>
+    <li>Create D1 database and apply schema SQL.</li>
+    <li>Deploy ingest worker and connect survey webhook target.</li>
+    <li>Run seed/mock loader to verify dashboard tab wiring.</li>
+    <li>Deploy Metabase free and connect read-only DB user.</li>
+    <li>Import dashboard templates and validate each tab.</li>
+    <li>Enable scheduled data quality checks and basic alerts.</li>
+  </ol>
+
+  <h2 id="checks">6) Tests & Data Checks (Required)</h2>
+  <ul>
+    <li>Integrity: non-null keys, FK references, uniqueness constraints.</li>
+    <li>Range checks: score levels restricted to 1..5 or N/A.</li>
+    <li>Dedup checks: repeated session bursts handled by fingerprint + timestamp rules.</li>
+    <li>Metric checks: maturity% consistent with SQL contract.</li>
+    <li>Edge cases: all N/A response, partial completion, mixed language text, malformed payload.</li>
+  </ul>
+
+  <h2 id="change">7) Change Protocol</h2>
+  <p>Any requested change should update: (1) semantic SQL, (2) this HTML section, and (3) smoke-check evidence.</p>
+</body>
+</html>
